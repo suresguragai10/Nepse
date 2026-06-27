@@ -321,7 +321,10 @@ footer b{color:var(--muted)}
       <button class="btn primary" id="refreshBtn">⟳ Fetch latest data</button>
       <button class="btn ghost" id="loadDemoBtn">Load demo data</button>
       <div class="spacer"></div>
-      <span class="fs-sm dim" id="lastUpdated">No data loaded yet</span>
+      <div style="text-align:right;line-height:1.5">
+        <div class="fs-sm dim" id="dataDate">—</div>
+        <div class="fs-sm dim" id="lastUpdated">No data loaded yet</div>
+      </div>
     </div>
 
     <div class="grid g4" style="margin-bottom:14px">
@@ -689,6 +692,15 @@ async function jget(path){
   return res.json();
 }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
+// NEPSE trades Mon–Fri. Returns YYYY-MM-DD of the most recent trading weekday
+// (today if it's a weekday, otherwise the last Friday). Note: does not account for public holidays.
+function lastTradingDay(){
+  const d=new Date();
+  let day=d.getDay(); // 0=Sun,6=Sat
+  while(day===0||day===6){ d.setDate(d.getDate()-1); day=d.getDay(); }
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(s){ if(!s) return '—'; try{ return new Date(s+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return s; } }
 
 // Normalize a PriceVolume / LiveMarket row (API field names vary)
 function normRow(o){
@@ -739,7 +751,16 @@ async function fetchLatest(){
     }catch(e){}
     try{ const sm=await jget('/Summary'); turnover=parseFloat((sm['Total Turnover Rs:']||sm.totalTurnover||sm.turnover||'').toString().replace(/,/g,''))||null; }catch(e){}
 
-    SNAP={ ts:Date.now(), date:todayStr(), index, indexCh, turnover, rows };
+    // market open status (best effort) — used to label the data date
+    let marketOpen=null;
+    try{
+      const op=await jget('/IsNepseOpen');
+      const val = (op && typeof op==='object') ? (op.isOpen!=null?op.isOpen:(op.is_open!=null?op.is_open:op.status)) : op;
+      if(typeof val==='boolean') marketOpen=val;
+      else if(typeof val==='string') marketOpen=/open|true|yes/i.test(val);
+    }catch(e){}
+
+    SNAP={ ts:Date.now(), date:todayStr(), dataDate:lastTradingDay(), marketOpen, index, indexCh, turnover, rows };
     store.set(LS.snap, SNAP);
     appendSnapshotToHistory();
     afterData('live');
@@ -769,6 +790,11 @@ function afterData(state){
   computeAll();
   setStatus(state==='live'?'live':'', state==='live'?'Live data':'Demo data');
   document.getElementById('lastUpdated').textContent='Updated '+new Date(SNAP.ts).toLocaleString();
+  const dd=document.getElementById('dataDate');
+  if(dd){
+    const label = SNAP.marketOpen===true ? 'Live (market open)' : 'Last close';
+    dd.innerHTML = '<b style="color:var(--muted)">Data:</b> '+fmtDate(SNAP.dataDate||SNAP.date)+' · '+label;
+  }
   renderTicker(); renderDashboard(); renderScreener(); renderWatch(); renderPortfolio(); renderHistStats();
   showNotice(false);
 }
@@ -805,7 +831,7 @@ function loadDemo(){
   }
   store.set(LS.hist, HISTORY);
   NAME_MAP=names;
-  SNAP={ts:Date.now(),date:todayStr(),index:+(2100+Math.random()*200).toFixed(2),indexCh:+((Math.random()-0.4)*2).toFixed(2),
+  SNAP={ts:Date.now(),date:todayStr(),dataDate:lastTradingDay(),marketOpen:false,index:+(2100+Math.random()*200).toFixed(2),indexCh:+((Math.random()-0.4)*2).toFixed(2),
     turnover:Math.round(3e9+Math.random()*4e9), rows};
   store.set(LS.snap,SNAP);
   afterData('demo');
