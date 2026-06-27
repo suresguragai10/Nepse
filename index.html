@@ -463,7 +463,7 @@ footer b{color:var(--muted)}
         <div class="section-title">Data source</div>
         <div class="field">
           <label>NEPSE API base URL</label>
-          <input id="apiUrl" value="https://nepseapi.surajrimal.dev" placeholder="https://your-api.example.com">
+          <input id="apiUrl" value="https://nepseapi-unofficial-nxoq.onrender.com" placeholder="https://your-api.example.com">
         </div>
         <div class="field">
           <label>CORS proxy (optional — use if fetch is blocked)</label>
@@ -691,7 +691,7 @@ function computeAll(){
 /* ============================================================
    DATA FETCHING
    ============================================================ */
-function apiBase(){ return (document.getElementById('apiUrl').value||'https://nepseapi.surajrimal.dev').replace(/\/$/,''); }
+function apiBase(){ return (document.getElementById('apiUrl').value||'https://nepseapi-unofficial-nxoq.onrender.com').replace(/\/$/,''); }
 function corsProxy(){ return (document.getElementById('corsProxy').value||'').trim(); }
 function wrapUrl(u){ const p=corsProxy(); if(!p) return u; return p+(p.includes('?')||p.endsWith('=')?encodeURIComponent(u):u); }
 function setStatus(state, text){
