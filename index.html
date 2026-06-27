@@ -493,6 +493,19 @@ footer b{color:var(--muted)}
     </div>
 
     <div class="card" style="margin-top:14px">
+      <div class="section-title">Backfill history from API <span class="muted fs-sm" style="font-weight:400">— makes SMA / MACD / buy signals work instantly</span></div>
+      <p class="fs-sm dim" style="margin-bottom:12px">Pulls up to a year of daily prices for every stock from your API's <span class="mono" style="color:var(--accent)">PriceVolumeHistory</span> endpoint. Run this once. It goes slowly (a small pause between stocks) to respect the API rate limit, so it may take a few minutes. Keep this tab open while it runs.</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn primary" id="backfillBtn">Backfill all history</button>
+        <button class="btn ghost" id="backfillStopBtn" style="display:none">Stop</button>
+        <span class="fs-sm" id="backfillStatus"></span>
+      </div>
+      <div id="backfillBarWrap" style="display:none;margin-top:12px;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden">
+        <div id="backfillBar" style="height:100%;width:0;background:var(--buy);transition:width .2s"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
       <div class="section-title">How the signals work</div>
       <p class="fs-sm muted" style="line-height:1.8">
         Each stock is scored against the conditions you enable in the Screener tab. <b style="color:var(--buy)">SMA</b>: price above its moving average (uptrend).
@@ -1116,6 +1129,58 @@ function importCsv(text){
   return {n};
 }
 
+/* ---------- Backfill history from API (PriceVolumeHistory per symbol) ---------- */
+let BACKFILL_STOP=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function mergeHistoryRows(sym, rows){
+  // rows: array of {businessDate, closePrice, totalTradedQuantity}
+  HISTORY[sym]=HISTORY[sym]||[];
+  const byDate={}; HISTORY[sym].forEach(x=>byDate[x.d]=x);
+  let added=0;
+  for(const r of rows){
+    const d=(r.businessDate||r.date||'').slice(0,10);
+    const c=parseFloat(r.closePrice!=null?r.closePrice:r.close);
+    const v=parseFloat(r.totalTradedQuantity!=null?r.totalTradedQuantity:(r.volume||0))||0;
+    if(!d||isNaN(c)) continue;
+    if(byDate[d]){ byDate[d].c=c; byDate[d].v=v; } else { const o={d,c,v}; HISTORY[sym].push(o); byDate[d]=o; added++; }
+  }
+  HISTORY[sym].sort((a,b)=>a.d<b.d?-1:1);
+  if(HISTORY[sym].length>400) HISTORY[sym]=HISTORY[sym].slice(-400);
+  return added;
+}
+async function backfillHistory(){
+  if(!SNAP || !Object.keys(SNAP.rows).length){ return {err:'Fetch latest data first so the app knows which stocks exist.'}; }
+  BACKFILL_STOP=false;
+  const syms=Object.keys(SNAP.rows).sort();
+  const total=syms.length;
+  const statusEl=document.getElementById('backfillStatus');
+  const barWrap=document.getElementById('backfillBarWrap'), bar=document.getElementById('backfillBar');
+  const btn=document.getElementById('backfillBtn'), stopBtn=document.getElementById('backfillStopBtn');
+  barWrap.style.display='block'; btn.disabled=true; stopBtn.style.display='inline-flex';
+  let ok=0, fail=0;
+  for(let i=0;i<total;i++){
+    if(BACKFILL_STOP){ statusEl.textContent='Stopped at '+i+'/'+total+'. Progress saved.'; statusEl.className='fs-sm'; break; }
+    const sym=syms[i];
+    statusEl.textContent=`Fetching ${sym}… (${i+1}/${total}) · ${ok} done`;
+    statusEl.className='fs-sm muted';
+    try{
+      const data=await jget('/PriceVolumeHistory?symbol='+encodeURIComponent(sym));
+      const rows=Array.isArray(data)?data:(data&&Array.isArray(data.content)?data.content:null);
+      if(rows&&rows.length){ mergeHistoryRows(sym, rows); ok++; }
+      else fail++;
+    }catch(e){ fail++; }
+    bar.style.width=Math.round(((i+1)/total)*100)+'%';
+    // save periodically so progress survives interruptions
+    if(i%10===0) store.set(LS.hist,HISTORY);
+    await sleep(1100); // ~55 req/min, under the 60/min limit
+  }
+  store.set(LS.hist,HISTORY);
+  btn.disabled=false; stopBtn.style.display='none';
+  if(!BACKFILL_STOP){ statusEl.textContent=`✓ Done. ${ok} stocks backfilled${fail?', '+fail+' had no data':''}.`; statusEl.className='fs-sm up'; }
+  renderHistStats(); recompute();
+  return {ok,fail};
+}
+
 /* ============================================================
    WIRING
    ============================================================ */
@@ -1189,6 +1254,12 @@ document.getElementById('csvTemplateBtn').addEventListener('click',()=>{
   const csv='symbol,date,close,volume\nNABIL,2026-06-24,512.0,14500\nNABIL,2026-06-25,518.5,16200\nNICA,2026-06-24,388.0,22000\nNICA,2026-06-25,392.1,19800\n';
   dl('nepse_history_template.csv',csv);
 });
+document.getElementById('backfillBtn').addEventListener('click',async()=>{
+  const statusEl=document.getElementById('backfillStatus');
+  const out=await backfillHistory();
+  if(out&&out.err){ statusEl.textContent=out.err; statusEl.className='fs-sm dn'; }
+});
+document.getElementById('backfillStopBtn').addEventListener('click',()=>{ BACKFILL_STOP=true; });
 document.getElementById('exportBtn').addEventListener('click',()=>{
   const blob={history:HISTORY,watch:WATCH,portfolio:PORT,config:CFG,exported:new Date().toISOString()};
   dl('nepse_terminal_backup.json',JSON.stringify(blob,null,2));
