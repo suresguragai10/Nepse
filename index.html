@@ -726,7 +726,17 @@ async function fetchLatest(){
 
     // index + summary (best effort)
     let index=null,indexCh=null,turnover=null;
-    try{ const ix=await jget('/NepseIndex'); const v=Array.isArray(ix)?ix[0]:ix; index=parseFloat(v.currentValue||v.index||v.close||v.value)||null; indexCh=parseFloat(v.percentageChange||v.perChange||v.change)||null; }catch(e){}
+    try{
+      const ix=await jget('/NepseIndex');
+      // response can be: an array, a single object, or an object keyed by index name
+      let v=null;
+      if(Array.isArray(ix)){ v=ix.find(o=>/nepse/i.test(o.index||o.name||''))||ix[0]; }
+      else if(ix && typeof ix==='object'){ v=ix['NEPSE Index']||ix['NEPSE']||Object.values(ix).find(o=>o&&/nepse/i.test(o.index||o.name||''))||ix; }
+      if(v){
+        index=parseFloat(v.close||v.currentValue||v.value||v.lastValue)||null;
+        indexCh=parseFloat(v.perChange||v.percentageChange||v.change)||null;
+      }
+    }catch(e){}
     try{ const sm=await jget('/Summary'); turnover=parseFloat((sm['Total Turnover Rs:']||sm.totalTurnover||sm.turnover||'').toString().replace(/,/g,''))||null; }catch(e){}
 
     SNAP={ ts:Date.now(), date:todayStr(), index, indexCh, turnover, rows };
