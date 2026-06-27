@@ -310,6 +310,9 @@ footer b{color:var(--muted)}
   <nav class="tabs" id="tabs">
     <button data-v="dash" class="on">Dashboard</button>
     <button data-v="screen">Buy Screener</button>
+    <button data-v="short">Short Term</button>
+    <button data-v="mid">Mid Term</button>
+    <button data-v="long">Long Term</button>
     <button data-v="watch">Watchlist</button>
     <button data-v="port">Portfolio</button>
     <button data-v="data">Data &amp; History</button>
@@ -414,6 +417,75 @@ footer b{color:var(--muted)}
           <th data-k="signal">Signal</th>
         </tr></thead>
         <tbody id="screenBody"><tr><td colspan="10" class="empty"><b>No data</b>Go to Dashboard and fetch latest data first.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ SHORT TERM ============ -->
+  <section class="view" id="v-short">
+    <div class="notice" style="background:rgba(62,155,255,.08);border-color:rgba(62,155,255,.25);color:#9cc4ff">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span><b>Short term (days – few weeks).</b> Momentum & volume plays. On NEPSE this is the most rumor-driven, riskiest horizon — moves cluster in hot sectors (hydropower, microfinance, news stocks) and can reverse fast. Watch <b>volume</b> above all: a price move without volume rarely holds. Avoid chasing a stock that has already run 20–30%. Remember T+2 settlement and daily circuit limits. <i>Educational only — not advice.</i></span>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— short-term momentum setups</span></div>
+      <p class="fs-sm muted" style="line-height:1.7">Today closed up, today's volume is above its recent average (conviction), MACD histogram turning positive (momentum), and price above the short SMA(20). Higher score = more momentum boxes ticked. These are <b>setups to investigate</b>, not buy signals.</p>
+    </div>
+    <div class="bar">
+      <input class="search" id="shortSearch" placeholder="Filter by symbol…">
+      <div class="spacer"></div>
+      <span class="fs-sm dim" id="shortCount">—</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>LTP</th><th>%Chg</th><th>Vol×</th><th>MACD</th><th>vs SMA20</th><th>Setup</th></tr></thead>
+        <tbody id="shortBody"><tr><td colspan="7" class="empty"><b>No data</b>Fetch latest data, then backfill history in Data &amp; History.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ MID TERM ============ -->
+  <section class="view" id="v-mid">
+    <div class="notice" style="background:rgba(31,203,122,.07);border-color:rgba(31,203,122,.25);color:#7fe0b0">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      <span><b>Mid term (few months – ~1 year).</b> Positional / swing. NEPSE pros here watch the trend plus events: quarterly results, dividend/bonus & rights seasons, and especially <b>interest rates</b> — when bank rates fall, money rotates from deposits into shares and the market tends to rally. Catching a sector early is the game. <i>Educational only — not advice.</i></span>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— established uptrends</span></div>
+      <p class="fs-sm muted" style="line-height:1.7">Price above the medium SMA(50), the SMA(20) above SMA(50) (uptrend stack), positive MACD, and price not pinned to the top Bollinger band (room to run). Favors stocks in a sustained trend rather than one-day spikes. Pair with results/dividend news before acting.</p>
+    </div>
+    <div class="bar">
+      <input class="search" id="midSearch" placeholder="Filter by symbol…">
+      <div class="spacer"></div>
+      <span class="fs-sm dim" id="midCount">—</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>LTP</th><th>%Chg</th><th>SMA20</th><th>SMA50</th><th>Trend</th><th>Setup</th></tr></thead>
+        <tbody id="midBody"><tr><td colspan="7" class="empty"><b>No data</b>Fetch latest data, then backfill history in Data &amp; History.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ LONG TERM ============ -->
+  <section class="view" id="v-long">
+    <div class="notice" style="background:rgba(232,184,75,.08);border-color:rgba(232,184,75,.3);color:#e8c878">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+      <span><b>Long term (multi-year) — investing.</b> Here <b>fundamentals matter more than charts</b>: EPS, P/E, P/B, ROE, dividend history, book value. Nepali long-term investors favour well-capitalized commercial banks, strong life-insurance, and proven hydropower — and accumulate quality dividend payers during bear markets. <b>This screen can only show price-trend context</b> (your API gives limited fundamentals), so treat it as a starting shortlist, then study each company's reports & dividend history yourself. <i>Educational only — not advice.</i></span>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— long-trend & relative position</span></div>
+      <p class="fs-sm muted" style="line-height:1.7">Price above the long SMA(200) where enough history exists (primary uptrend), and where the stock sits within its ~1-year range (lower = potentially better value to accumulate). This is <b>context only</b> — confirm with fundamentals (EPS, P/E, dividends, sector quality) before any long-term decision.</p>
+    </div>
+    <div class="bar">
+      <input class="search" id="longSearch" placeholder="Filter by symbol…">
+      <div class="spacer"></div>
+      <span class="fs-sm dim" id="longCount">—</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>LTP</th><th>SMA200</th><th>vs 1yr range</th><th>52w Low</th><th>52w High</th><th>Context</th></tr></thead>
+        <tbody id="longBody"><tr><td colspan="7" class="empty"><b>No data</b>Backfill a year of history in Data &amp; History for long-term context.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -808,7 +880,7 @@ function afterData(state){
     const label = SNAP.marketOpen===true ? 'Live (market open)' : 'Last close';
     dd.innerHTML = '<b style="color:var(--muted)">Data:</b> '+fmtDate(SNAP.dataDate||SNAP.date)+' · '+label;
   }
-  renderTicker(); renderDashboard(); renderScreener(); renderWatch(); renderPortfolio(); renderHistStats();
+  renderTicker(); renderDashboard(); renderScreener(); renderShort(); renderMid(); renderLong(); renderWatch(); renderPortfolio(); renderHistStats();
   showNotice(false);
 }
 
@@ -935,7 +1007,7 @@ function buildCondToggles(){
   }));
 }
 function saveCfg(){ store.set(LS.cfg, CFG); }
-function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderWatch(); }
+function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderShort(); renderMid(); renderLong(); renderWatch(); }
 
 function renderScreener(){
   const body=document.getElementById('screenBody');
@@ -979,6 +1051,133 @@ function renderScreener(){
       <td>${signalPill(r.signal)}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="10" class="empty fs-sm">No matches.</td></tr>`;
+}
+
+/* ---------- Horizon screeners (Short / Mid / Long term) ---------- */
+function setupPill(score, total){
+  const c = score>=total ? 'buy' : score>=Math.ceil(total/2) ? 'hold' : 'sell';
+  const label = score>=total ? 'STRONG' : score>=Math.ceil(total/2) ? 'WATCH' : 'WEAK';
+  return `<span class="pill ${c}" title="${score}/${total} boxes">${label} ${score}/${total}</span>`;
+}
+function horizonMetrics(sym){
+  const closes = closesFor(sym);
+  const vols = volsFor(sym);
+  const r = SNAP ? SNAP.rows[sym] : null;
+  if(!r) return null;
+  const ltp = r.ltp;
+  const sma20=SMA(closes,20), sma50=SMA(closes,50), sma200=SMA(closes,200);
+  const bb=bollinger(closes,20);
+  const mc=macd(closes); const hist = mc?mc.hist:null;
+  let volRatio=null;
+  if(vols.length>=21){ const avg=vols.slice(-21,-1).reduce((a,b)=>a+b,0)/20||1; volRatio=(r.vol||0)/avg; }
+  // 1-year range position from history (0=at low, 100=at high)
+  const yr = closes.slice(-250);
+  let lo=null,hi=null,rangePos=null;
+  if(yr.length>20){ lo=Math.min(...yr); hi=Math.max(...yr); if(hi>lo) rangePos=((ltp-lo)/(hi-lo))*100; }
+  return {sym, ltp, pct:r.pct, sma20, sma50, sma200, bb, hist, volRatio, histLen:closes.length, lo, hi, rangePos};
+}
+function filterRealStocks(){
+  // exclude obvious non-ordinary instruments: debentures, mutual funds, promoter shares, bonds
+  if(!SNAP) return [];
+  return Object.keys(SNAP.rows).filter(sym=>{
+    const r=SNAP.rows[sym];
+    const ltp=r.ltp||0;
+    // mutual funds trade near par ~10; debentures/bonds carry 'D'/'BOND' patterns; promoter '...P'/'PO'
+    if(ltp>0 && ltp<30) return false;                      // likely mutual fund unit
+    if(/D\d{2}|D8\d|D9\d|BOND|DEBENTURE|D\d{2}\/\d{2}/i.test(sym)) return false;
+    if(/(MF\d?|FUND|YOJANA|KOSH|SCHEME)$/i.test((NAME_MAP[sym]||''))) return false;
+    if(/P$|PO$|PROMOTER/i.test(sym)) return false;
+    return true;
+  });
+}
+function bindHorizonSearch(id, fn){ const el=document.getElementById(id); if(el && !el._bound){ el._bound=true; el.addEventListener('input',fn); } }
+
+function renderShort(){
+  const body=document.getElementById('shortBody'); if(!body) return;
+  if(!SNAP){ return; }
+  const q=(document.getElementById('shortSearch').value||'').toUpperCase().trim();
+  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
+  rows=rows.map(m=>{
+    let s=0; const T=4;
+    if(m.pct>0) s++;                                   // up day
+    if(m.volRatio!=null && m.volRatio>1) s++;          // volume surge
+    if(m.hist!=null && m.hist>0) s++;                  // momentum
+    if(m.sma20!=null && m.ltp>m.sma20) s++;            // above short MA
+    return {...m, score:s, total:T};
+  });
+  if(q) rows=rows.filter(m=>m.sym.includes(q));
+  rows=rows.filter(m=>m.score>=2).sort((a,b)=>b.score-a.score||b.volRatio-a.volRatio||b.pct-a.pct);
+  document.getElementById('shortCount').textContent=`${rows.length} setups`;
+  body.innerHTML = rows.length ? rows.slice(0,80).map(m=>`
+    <tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
+      <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
+      <td>${fmt(m.ltp)}</td>
+      <td class="${pctClass(m.pct)}">${arrow(m.pct)}${Math.abs(m.pct).toFixed(2)}%</td>
+      <td class="${m.volRatio>1?'up':'dim'}">${m.volRatio!=null?m.volRatio.toFixed(2)+'×':'—'}</td>
+      <td class="${m.hist>0?'up':m.hist<0?'dn':'dim'}">${m.hist!=null?fmt(m.hist):'—'}</td>
+      <td class="${m.sma20!=null&&m.ltp>m.sma20?'up':'dim'}">${m.sma20!=null?(m.ltp>m.sma20?'above':'below'):'—'}</td>
+      <td>${setupPill(m.score,m.total)}</td>
+    </tr>`).join('') : `<tr><td colspan="7" class="empty fs-sm">No short-term setups right now. Backfill history if columns are blank.</td></tr>`;
+}
+
+function renderMid(){
+  const body=document.getElementById('midBody'); if(!body) return;
+  if(!SNAP){ return; }
+  const q=(document.getElementById('midSearch').value||'').toUpperCase().trim();
+  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
+  rows=rows.map(m=>{
+    let s=0; const T=4;
+    if(m.sma50!=null && m.ltp>m.sma50) s++;                       // above medium MA
+    if(m.sma20!=null && m.sma50!=null && m.sma20>m.sma50) s++;    // uptrend stack
+    if(m.hist!=null && m.hist>0) s++;                             // momentum
+    if(m.bb && m.ltp < m.bb.up*0.98) s++;                        // not pinned to top band
+    return {...m, score:s, total:T};
+  });
+  if(q) rows=rows.filter(m=>m.sym.includes(q));
+  rows=rows.filter(m=>m.sma50!=null && m.score>=2).sort((a,b)=>b.score-a.score||b.pct-a.pct);
+  document.getElementById('midCount').textContent=`${rows.length} in uptrend`;
+  body.innerHTML = rows.length ? rows.slice(0,80).map(m=>{
+    const stack = (m.sma20!=null&&m.sma50!=null&&m.sma20>m.sma50);
+    return `<tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
+      <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
+      <td>${fmt(m.ltp)}</td>
+      <td class="${pctClass(m.pct)}">${arrow(m.pct)}${Math.abs(m.pct).toFixed(2)}%</td>
+      <td class="${m.sma20!=null&&m.ltp>m.sma20?'up':'dim'}">${fmt(m.sma20)}</td>
+      <td class="${m.sma50!=null&&m.ltp>m.sma50?'up':'dim'}">${fmt(m.sma50)}</td>
+      <td class="${stack?'up':'dim'}">${stack?'rising':'flat/down'}</td>
+      <td>${setupPill(m.score,m.total)}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty fs-sm">No mid-term uptrends found, or not enough history (need ≥50 days). Backfill in Data &amp; History.</td></tr>`;
+}
+
+function renderLong(){
+  const body=document.getElementById('longBody'); if(!body) return;
+  if(!SNAP){ return; }
+  const q=(document.getElementById('longSearch').value||'').toUpperCase().trim();
+  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
+  rows=rows.filter(m=>m.histLen>=120); // need substantial history for long-term context
+  if(q) rows=rows.filter(m=>m.sym.includes(q));
+  // sort: primary uptrend first, then cheaper within range (lower rangePos = better value)
+  rows.sort((a,b)=>{
+    const au=(a.sma200!=null&&a.ltp>a.sma200)?1:0, bu=(b.sma200!=null&&b.ltp>b.sma200)?1:0;
+    if(au!==bu) return bu-au;
+    return (a.rangePos??50)-(b.rangePos??50);
+  });
+  document.getElementById('longCount').textContent=`${rows.length} with long history`;
+  body.innerHTML = rows.length ? rows.slice(0,120).map(m=>{
+    const upTrend = m.sma200!=null && m.ltp>m.sma200;
+    const ctx = m.sma200==null ? 'building history' : (upTrend ? 'above SMA200' : 'below SMA200');
+    const cls = m.sma200==null ? 'dim' : (upTrend?'up':'dn');
+    return `<tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
+      <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
+      <td>${fmt(m.ltp)}</td>
+      <td class="${upTrend?'up':'dim'}">${m.sma200!=null?fmt(m.sma200):'—'}</td>
+      <td>${m.rangePos!=null?m.rangePos.toFixed(0)+'%':'—'}</td>
+      <td class="dim">${m.lo!=null?fmt(m.lo):'—'}</td>
+      <td class="dim">${m.hi!=null?fmt(m.hi):'—'}</td>
+      <td><span class="pill ${cls==='up'?'buy':cls==='dn'?'sell':'hold'}">${ctx}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty fs-sm">Not enough history yet. Backfill a year of data in Data &amp; History for long-term context.</td></tr>`;
 }
 
 /* ---------- Watchlist ---------- */
@@ -1188,8 +1387,14 @@ function switchTab(v){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   if(v==='watch') renderWatch();
+  if(v==='short') renderShort();
+  if(v==='mid') renderMid();
+  if(v==='long') renderLong();
 }
 document.getElementById('tabs').addEventListener('click',e=>{ if(e.target.dataset.v) switchTab(e.target.dataset.v); });
+bindHorizonSearch('shortSearch', renderShort);
+bindHorizonSearch('midSearch', renderMid);
+bindHorizonSearch('longSearch', renderLong);
 
 document.getElementById('refreshBtn').addEventListener('click',fetchLatest);
 document.getElementById('loadDemoBtn').addEventListener('click',loadDemo);
