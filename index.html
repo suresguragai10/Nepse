@@ -10,43 +10,41 @@
 <title>NEPSE Terminal — Personal Screener</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0B0E11;
-  --panel:#12161C;
-  --panel-2:#171C24;
-  --line:#222A35;
+  --bg:#0A0C10;
+  --panel:#10141B;
+  --panel-2:#161B24;
+  --line:#232A35;
   --line-soft:#1A2029;
-  --txt:#E6EAF0;
-  --muted:#7A8694;
-  --dim:#525E6C;
-  --buy:#1FCB7A;
-  --buy-dim:#0E3B28;
-  --sell:#FF5A6E;
-  --sell-dim:#3B1318;
-  --warn:#F5A623;
-  --accent:#3E9BFF;
-  --accent-dim:#10243B;
-  --gold:#E8B84B;
-  --radius:10px;
-  --shadow:0 8px 28px rgba(0,0,0,.45);
+  --txt:#EAEDF2;
+  --muted:#8893A2;
+  --dim:#4C5563;
+  --buy:#2BB673;
+  --buy-dim:#0E3324;
+  --sell:#F25F5C;
+  --sell-dim:#3A1614;
+  --warn:#E0A82E;
+  --accent:#E0A82E;
+  --accent-dim:rgba(224,168,46,.12);
+  --gold:#E0A82E;
+  --radius:8px;
+  --shadow:0 12px 40px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{
-  background:
-    radial-gradient(1200px 600px at 85% -10%, rgba(62,155,255,.06), transparent 60%),
-    radial-gradient(900px 500px at 0% 0%, rgba(31,203,122,.05), transparent 55%),
-    var(--bg);
+  background:var(--bg);
   color:var(--txt);
-  font-family:'Space Grotesk',system-ui,sans-serif;
+  font-family:'Inter Tight',system-ui,sans-serif;
   font-size:14px;
-  line-height:1.45;
+  line-height:1.5;
   min-height:100vh;
+  -webkit-font-smoothing:antialiased;
 }
-.mono{font-family:'IBM Plex Mono',monospace}
+.mono{font-family:'Roboto Mono',monospace;font-variant-numeric:tabular-nums}
 button{font-family:inherit;cursor:pointer}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -57,21 +55,21 @@ button{font-family:inherit;cursor:pointer}
 header{
   position:sticky;top:0;z-index:50;
   display:flex;align-items:center;gap:18px;
-  padding:14px 22px;
-  background:rgba(11,14,17,.82);
-  backdrop-filter:blur(14px);
+  padding:13px 22px;
+  background:rgba(10,12,16,.9);
+  backdrop-filter:blur(16px);
   border-bottom:1px solid var(--line);
 }
 .brand{display:flex;align-items:center;gap:11px;flex-shrink:0}
 .brand-mark{
-  width:34px;height:34px;border-radius:9px;
-  background:linear-gradient(145deg,#1FCB7A,#0E8F55);
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(150deg,#E0A82E,#B5821B);
   display:grid;place-items:center;
-  font-weight:700;color:#04130C;font-size:17px;
-  box-shadow:0 0 0 1px rgba(31,203,122,.25),0 4px 14px rgba(31,203,122,.22);
+  font-weight:700;color:#1A1304;font-size:17px;font-family:'Fraunces',serif;
+  box-shadow:0 0 0 1px rgba(224,168,46,.3);
 }
-.brand h1{font-size:16px;font-weight:600;letter-spacing:.3px}
-.brand .sub{font-size:10.5px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase}
+.brand h1{font-family:'Fraunces',serif;font-size:19px;font-weight:600;letter-spacing:.2px}
+.brand .sub{font-size:9.5px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;font-weight:600}
 .ticker{
   flex:1;overflow:hidden;white-space:nowrap;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
@@ -80,47 +78,65 @@ header{
 .ticker-track{display:inline-block;animation:scroll 60s linear infinite;padding-left:100%}
 .ticker:hover .ticker-track{animation-play-state:paused}
 @keyframes scroll{to{transform:translateX(-100%)}}
-.tick{display:inline-flex;align-items:baseline;gap:7px;margin:0 18px;font-size:12.5px}
-.tick b{font-weight:600;letter-spacing:.4px}
-.tick .px{font-family:'IBM Plex Mono',monospace;color:var(--muted)}
+.tick{display:inline-flex;align-items:baseline;gap:7px;margin:0 16px;font-size:12px}
+.tick b{font-weight:600;letter-spacing:.3px}
+.tick .px{font-family:'Roboto Mono',monospace;color:var(--muted);font-variant-numeric:tabular-nums}
 .tick .ch.up{color:var(--buy)}
 .tick .ch.dn{color:var(--sell)}
-.status{display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:11.5px;color:var(--muted)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
-.dot.live{background:var(--buy);box-shadow:0 0 0 0 rgba(31,203,122,.6);animation:pulse 2s infinite}
+.status{display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:11px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.dot.live{background:var(--buy)}
 .dot.err{background:var(--sell)}
-@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(31,203,122,0)}100%{box-shadow:0 0 0 0 rgba(31,203,122,0)}}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(43,182,115,0)}100%{box-shadow:0 0 0 0 rgba(43,182,115,0)}}
+
+/* ---------- Market pulse rail (signature) ---------- */
+.pulse{
+  max-width:1400px;margin:0 auto;padding:14px 22px 0;
+}
+.pulse-inner{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.pulse-idx{display:flex;align-items:baseline;gap:9px;flex-shrink:0}
+.pulse-idx .nm{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pulse-idx .v{font-family:'Roboto Mono',monospace;font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.pulse-idx .c{font-family:'Roboto Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums}
+.pulse-bar-wrap{flex:1;min-width:220px;display:flex;flex-direction:column;gap:5px}
+.pulse-bar{height:7px;border-radius:4px;overflow:hidden;display:flex;background:var(--panel-2);border:1px solid var(--line-soft)}
+.pulse-bar .adv{background:linear-gradient(90deg,#1d9c5f,#2BB673);height:100%}
+.pulse-bar .dec{background:linear-gradient(90deg,#F25F5C,#c8413e);height:100%}
+.pulse-legend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-family:'Roboto Mono',monospace}
+.pulse-legend .a{color:var(--buy)}.pulse-legend .d{color:var(--sell)}
 
 /* ---------- Layout ---------- */
-.wrap{max-width:1400px;margin:0 auto;padding:22px}
-nav.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 22px 60px}
+nav.tabs{display:flex;gap:2px;margin-bottom:22px;border-bottom:1px solid var(--line);overflow-x:auto}
 nav.tabs button{
   background:none;border:none;color:var(--muted);
-  padding:11px 16px;font-size:13.5px;font-weight:500;
+  padding:11px 15px;font-size:13px;font-weight:500;letter-spacing:.2px;
   border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
   transition:color .15s;
 }
 nav.tabs button:hover{color:var(--txt)}
-nav.tabs button.on{color:var(--txt);border-bottom-color:var(--buy)}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
 .view{display:none;animation:fade .25s ease}
 .view.on{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
 /* ---------- Cards / grids ---------- */
-.grid{display:grid;gap:14px}
+.grid{display:grid;gap:13px}
 .g4{grid-template-columns:repeat(4,1fr)}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g2{grid-template-columns:2fr 1fr}
 .card{
-  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  background:var(--panel);
   border:1px solid var(--line);border-radius:var(--radius);
   padding:18px;
 }
-.card h3{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
-.stat .val{font-size:26px;font-weight:600;letter-spacing:.3px}
-.stat .delta{font-size:12.5px;margin-top:3px}
+.card h3{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+.stat .val{font-size:27px;font-weight:600;letter-spacing:.2px;font-family:'Roboto Mono',monospace;font-variant-numeric:tabular-nums}
+.stat .delta{font-size:12.5px;margin-top:3px;font-family:'Roboto Mono',monospace}
 .up{color:var(--buy)}.dn{color:var(--sell)}.neutral{color:var(--muted)}
-.card.glow-buy{border-color:rgba(31,203,122,.4);box-shadow:0 0 0 1px rgba(31,203,122,.08),0 0 30px rgba(31,203,122,.07)}
+.card.glow-buy{border-color:rgba(224,168,46,.35)}
 
 /* ---------- Toggles ---------- */
 .cond-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px}
@@ -129,7 +145,7 @@ nav.tabs button.on{color:var(--txt);border-bottom-color:var(--buy)}
   background:var(--panel-2);border:1px solid var(--line-soft);
   border-radius:8px;padding:11px 13px;transition:border-color .15s;
 }
-.cond.on{border-color:rgba(31,203,122,.35)}
+.cond.on{border-color:rgba(224,168,46,.35)}
 .cond-label{display:flex;flex-direction:column;gap:1px}
 .cond-label b{font-size:13px;font-weight:600}
 .cond-label span{font-size:11px;color:var(--dim)}
@@ -137,23 +153,23 @@ nav.tabs button.on{color:var(--txt);border-bottom-color:var(--buy)}
 .sw input{opacity:0;width:0;height:0}
 .sw .track{position:absolute;inset:0;background:#2A323D;border-radius:30px;transition:.2s}
 .sw .track:before{content:"";position:absolute;height:15px;width:15px;left:3px;top:3px;background:#7A8694;border-radius:50%;transition:.2s}
-.sw input:checked + .track{background:var(--buy-dim)}
-.sw input:checked + .track:before{transform:translateX(17px);background:var(--buy)}
+.sw input:checked + .track{background:rgba(224,168,46,.25)}
+.sw input:checked + .track:before{transform:translateX(17px);background:var(--accent)}
 .config-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)}
 .minislider{display:flex;flex-direction:column;gap:3px}
 .minislider label{font-size:10.5px;color:var(--muted);letter-spacing:.5px}
 .minislider .rr{display:flex;align-items:center;gap:8px}
-input[type=range]{accent-color:var(--buy);width:120px}
-.minislider b{font-family:'IBM Plex Mono',monospace;font-size:12px;min-width:34px}
+input[type=range]{accent-color:var(--accent);width:120px}
+.minislider b{font-family:'Roboto Mono',monospace;font-size:12px;min-width:34px}
 
 /* ---------- Buttons ---------- */
 .btn{
   background:var(--panel-2);border:1px solid var(--line);color:var(--txt);
-  padding:9px 15px;border-radius:8px;font-size:12.5px;font-weight:500;
+  padding:9px 15px;border-radius:7px;font-size:12.5px;font-weight:500;
   display:inline-flex;align-items:center;gap:7px;transition:.15s;
 }
 .btn:hover{border-color:#33404e;background:#1c2531}
-.btn.primary{background:linear-gradient(145deg,#1FCB7A,#119A5B);border-color:transparent;color:#04130C;font-weight:600}
+.btn.primary{background:linear-gradient(150deg,#E0A82E,#C28E1E);border-color:transparent;color:#1A1304;font-weight:600}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.ghost{background:none}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -175,32 +191,32 @@ thead th{
 }
 thead th:first-child,tbody td:first-child{text-align:left}
 thead th:hover{color:var(--txt)}
-tbody td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--line-soft);font-family:'IBM Plex Mono',monospace}
+tbody td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--line-soft);font-family:'Roboto Mono',monospace;font-variant-numeric:tabular-nums}
 tbody tr{transition:background .12s}
-tbody tr:hover{background:rgba(62,155,255,.04)}
+tbody tr:hover{background:rgba(224,168,46,.05)}
 tbody tr:last-child td{border-bottom:none}
-.sym{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.3px}
-.sym small{display:block;font-weight:400;color:var(--dim);font-size:10.5px;letter-spacing:0;font-family:'Space Grotesk',sans-serif}
-.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:600;letter-spacing:.5px;font-family:'Space Grotesk',sans-serif}
+.sym{font-family:'Inter Tight',sans-serif;font-weight:600;letter-spacing:.2px}
+.sym small{display:block;font-weight:400;color:var(--dim);font-size:10.5px;letter-spacing:0;font-family:'Inter Tight',sans-serif}
+.pill{display:inline-block;padding:3px 9px;border-radius:5px;font-size:10.5px;font-weight:600;letter-spacing:.4px;font-family:'Inter Tight',sans-serif}
 .pill.buy{background:var(--buy-dim);color:var(--buy)}
 .pill.sell{background:var(--sell-dim);color:var(--sell)}
 .pill.hold{background:#26313d;color:var(--muted)}
 .score-bar{display:inline-flex;gap:2px;vertical-align:middle}
 .score-bar i{width:5px;height:13px;border-radius:1px;background:#2A323D;display:inline-block}
-.score-bar i.f{background:var(--buy)}
-.tag{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--accent-dim);color:var(--accent);margin-left:4px;font-family:'Space Grotesk',sans-serif}
+.score-bar i.f{background:var(--accent)}
+.tag{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--accent-dim);color:var(--accent);margin-left:4px;font-family:'Inter Tight',sans-serif}
 .empty{padding:48px 20px;text-align:center;color:var(--dim)}
 .empty b{display:block;color:var(--muted);font-size:15px;margin-bottom:6px;font-weight:500}
 
 /* ---------- Misc ---------- */
 .notice{
-  background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);
-  border-radius:8px;padding:11px 14px;font-size:12px;color:#f0c067;
-  display:flex;gap:9px;align-items:flex-start;margin-bottom:16px;
+  background:rgba(224,168,46,.07);border:1px solid rgba(224,168,46,.22);
+  border-radius:8px;padding:12px 15px;font-size:12px;color:#e8c878;
+  display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;line-height:1.65;
 }
-.notice svg{flex-shrink:0;margin-top:1px}
-.section-title{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-size:15px;font-weight:600}
-.section-title .ct{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--buy);background:var(--buy-dim);padding:2px 9px;border-radius:20px}
+.notice svg{flex-shrink:0;margin-top:2px}
+.section-title{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-size:16px;font-weight:600;font-family:'Fraunces',serif;letter-spacing:.2px}
+.section-title .ct{font-family:'Roboto Mono',monospace;font-size:12px;color:var(--accent);background:var(--accent-dim);padding:2px 9px;border-radius:5px}
 .muted{color:var(--muted)}.dim{color:var(--dim)}.fs-sm{font-size:12px}
 .spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;display:inline-block}
 @keyframes rot{to{transform:rotate(360deg)}}
@@ -224,11 +240,11 @@ tbody tr:last-child td{border-bottom:none}
 .x:hover{color:var(--txt)}
 
 .detail-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-.detail-head .px-big{font-size:32px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.detail-head .px-big{font-size:32px;font-weight:600;font-family:'Roboto Mono',monospace}
 .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;margin-top:14px}
 .ind{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px}
 .ind .k{font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
-.ind .v{font-size:17px;font-weight:600;font-family:'IBM Plex Mono',monospace;margin-top:4px}
+.ind .v{font-size:17px;font-weight:600;font-family:'Roboto Mono',monospace;margin-top:4px}
 .chk{font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600}
 .chk.pass{background:var(--buy-dim);color:var(--buy)}
 .chk.fail{background:#26313d;color:var(--dim)}
@@ -285,6 +301,17 @@ tbody tr:last-child td{border-bottom:none}
   nav.tabs button{padding:12px 16px}
   tbody tr{min-height:44px}
 }
+/* ---------- Segmented control (horizon switch) ---------- */
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+.seg button{
+  background:none;border:none;color:var(--muted);padding:8px 18px;border-radius:6px;
+  font-size:13px;font-weight:600;font-family:'Inter Tight',sans-serif;transition:.15s;white-space:nowrap;
+}
+.seg button:hover{color:var(--txt)}
+.seg button.on{background:linear-gradient(150deg,#E0A82E,#C28E1E);color:#1A1304}
+.horizon-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.horizon-head .lead h2{font-family:'Fraunces',serif;font-size:24px;font-weight:600;letter-spacing:.2px;margin-bottom:3px}
+.horizon-head .lead p{font-size:12.5px;color:var(--muted);max-width:520px;line-height:1.6}
 footer{max-width:1400px;margin:0 auto;padding:24px 22px;border-top:1px solid var(--line);color:var(--dim);font-size:11.5px;line-height:1.7}
 footer b{color:var(--muted)}
 </style>
@@ -306,13 +333,25 @@ footer b{color:var(--muted)}
   </div>
 </header>
 
+<div class="pulse">
+  <div class="pulse-inner">
+    <div class="pulse-idx">
+      <span class="nm">NEPSE</span>
+      <span class="v" id="pulseIdx">—</span>
+      <span class="c neutral" id="pulseCh"></span>
+    </div>
+    <div class="pulse-bar-wrap">
+      <div class="pulse-bar"><div class="adv" id="pulseAdv" style="width:50%"></div><div class="dec" id="pulseDec" style="width:50%"></div></div>
+      <div class="pulse-legend"><span class="a" id="pulseAdvN">— advancing</span><span class="d" id="pulseDecN">declining —</span></div>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
   <nav class="tabs" id="tabs">
     <button data-v="dash" class="on">Dashboard</button>
     <button data-v="screen">Buy Screener</button>
-    <button data-v="short">Short Term</button>
-    <button data-v="mid">Mid Term</button>
-    <button data-v="long">Long Term</button>
+    <button data-v="horizon">Screener Lab</button>
     <button data-v="watch">Watchlist</button>
     <button data-v="port">Portfolio</button>
     <button data-v="data">Data &amp; History</button>
@@ -421,71 +460,31 @@ footer b{color:var(--muted)}
     </div>
   </section>
 
-  <!-- ============ SHORT TERM ============ -->
-  <section class="view" id="v-short">
-    <div class="notice" style="background:rgba(62,155,255,.08);border-color:rgba(62,155,255,.25);color:#9cc4ff">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      <span><b>Short term (days – few weeks).</b> Momentum & volume plays. On NEPSE this is the most rumor-driven, riskiest horizon — moves cluster in hot sectors (hydropower, microfinance, news stocks) and can reverse fast. Watch <b>volume</b> above all: a price move without volume rarely holds. Avoid chasing a stock that has already run 20–30%. Remember T+2 settlement and daily circuit limits. <i>Educational only — not advice.</i></span>
+  <!-- ============ SCREENER LAB (Short / Mid / Long) ============ -->
+  <section class="view" id="v-horizon">
+    <div class="horizon-head">
+      <div class="lead">
+        <h2 id="hzTitle">Short Term</h2>
+        <p id="hzDesc">Momentum & volume plays over days to a few weeks.</p>
+      </div>
+      <div class="seg" id="hzSeg">
+        <button data-h="short" class="on">Short</button>
+        <button data-h="mid">Mid</button>
+        <button data-h="long">Long</button>
+      </div>
     </div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— short-term momentum setups</span></div>
-      <p class="fs-sm muted" style="line-height:1.7">Today closed up, today's volume is above its recent average (conviction), MACD histogram turning positive (momentum), and price above the short SMA(20). Higher score = more momentum boxes ticked. These are <b>setups to investigate</b>, not buy signals.</p>
-    </div>
-    <div class="bar">
-      <input class="search" id="shortSearch" placeholder="Filter by symbol…">
-      <div class="spacer"></div>
-      <span class="fs-sm dim" id="shortCount">—</span>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Symbol</th><th>LTP</th><th>%Chg</th><th>Vol×</th><th>MACD</th><th>vs SMA20</th><th>Setup</th></tr></thead>
-        <tbody id="shortBody"><tr><td colspan="7" class="empty"><b>No data</b>Fetch latest data, then backfill history in Data &amp; History.</td></tr></tbody>
-      </table>
-    </div>
-  </section>
 
-  <!-- ============ MID TERM ============ -->
-  <section class="view" id="v-mid">
-    <div class="notice" style="background:rgba(31,203,122,.07);border-color:rgba(31,203,122,.25);color:#7fe0b0">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-      <span><b>Mid term (few months – ~1 year).</b> Positional / swing. NEPSE pros here watch the trend plus events: quarterly results, dividend/bonus & rights seasons, and especially <b>interest rates</b> — when bank rates fall, money rotates from deposits into shares and the market tends to rally. Catching a sector early is the game. <i>Educational only — not advice.</i></span>
-    </div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— established uptrends</span></div>
-      <p class="fs-sm muted" style="line-height:1.7">Price above the medium SMA(50), the SMA(20) above SMA(50) (uptrend stack), positive MACD, and price not pinned to the top Bollinger band (room to run). Favors stocks in a sustained trend rather than one-day spikes. Pair with results/dividend news before acting.</p>
-    </div>
-    <div class="bar">
-      <input class="search" id="midSearch" placeholder="Filter by symbol…">
-      <div class="spacer"></div>
-      <span class="fs-sm dim" id="midCount">—</span>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Symbol</th><th>LTP</th><th>%Chg</th><th>SMA20</th><th>SMA50</th><th>Trend</th><th>Setup</th></tr></thead>
-        <tbody id="midBody"><tr><td colspan="7" class="empty"><b>No data</b>Fetch latest data, then backfill history in Data &amp; History.</td></tr></tbody>
-      </table>
-    </div>
-  </section>
+    <div class="notice" id="hzNotice"></div>
 
-  <!-- ============ LONG TERM ============ -->
-  <section class="view" id="v-long">
-    <div class="notice" style="background:rgba(232,184,75,.08);border-color:rgba(232,184,75,.3);color:#e8c878">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-      <span><b>Long term (multi-year) — investing.</b> Here <b>fundamentals matter more than charts</b>: EPS, P/E, P/B, ROE, dividend history, book value. Nepali long-term investors favour well-capitalized commercial banks, strong life-insurance, and proven hydropower — and accumulate quality dividend payers during bear markets. <b>This screen can only show price-trend context</b> (your API gives limited fundamentals), so treat it as a starting shortlist, then study each company's reports & dividend history yourself. <i>Educational only — not advice.</i></span>
-    </div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-title">What this screen looks for <span class="muted fs-sm" style="font-weight:400">— long-trend & relative position</span></div>
-      <p class="fs-sm muted" style="line-height:1.7">Price above the long SMA(200) where enough history exists (primary uptrend), and where the stock sits within its ~1-year range (lower = potentially better value to accumulate). This is <b>context only</b> — confirm with fundamentals (EPS, P/E, dividends, sector quality) before any long-term decision.</p>
-    </div>
     <div class="bar">
-      <input class="search" id="longSearch" placeholder="Filter by symbol…">
+      <input class="search" id="hzSearch" placeholder="Filter by symbol…">
       <div class="spacer"></div>
-      <span class="fs-sm dim" id="longCount">—</span>
+      <span class="fs-sm dim" id="hzCount">—</span>
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Symbol</th><th>LTP</th><th>SMA200</th><th>vs 1yr range</th><th>52w Low</th><th>52w High</th><th>Context</th></tr></thead>
-        <tbody id="longBody"><tr><td colspan="7" class="empty"><b>No data</b>Backfill a year of history in Data &amp; History for long-term context.</td></tr></tbody>
+        <thead><tr id="hzHead"></tr></thead>
+        <tbody id="hzBody"><tr><td colspan="7" class="empty"><b>No data yet</b>Fetch latest data on the Dashboard, then backfill a year of history in Data &amp; History so the indicators can compute.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -880,7 +879,7 @@ function afterData(state){
     const label = SNAP.marketOpen===true ? 'Live (market open)' : 'Last close';
     dd.innerHTML = '<b style="color:var(--muted)">Data:</b> '+fmtDate(SNAP.dataDate||SNAP.date)+' · '+label;
   }
-  renderTicker(); renderDashboard(); renderScreener(); renderShort(); renderMid(); renderLong(); renderWatch(); renderPortfolio(); renderHistStats();
+  renderTicker(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); renderPortfolio(); renderHistStats();
   showNotice(false);
 }
 
@@ -961,6 +960,16 @@ function renderDashboard(){
   const up=COMPUTED.filter(r=>r.pctChange>0).length, dn=COMPUTED.filter(r=>r.pctChange<0).length;
   document.getElementById('kpiBreadth').innerHTML=`<span class="up">${up}</span> / <span class="dn">${dn}</span>`;
 
+  // market pulse rail
+  const pIdx=document.getElementById('pulseIdx'), pCh=document.getElementById('pulseCh');
+  if(pIdx){ pIdx.textContent = SNAP.index!=null?fmt(SNAP.index):'—';
+    if(SNAP.indexCh!=null){ pCh.textContent=arrow(SNAP.indexCh)+Math.abs(SNAP.indexCh).toFixed(2)+'%'; pCh.className='c '+pctClass(SNAP.indexCh); } }
+  const tot=up+dn||1, advPct=Math.round(up/tot*100);
+  const pa=document.getElementById('pulseAdv'), pd=document.getElementById('pulseDec');
+  if(pa){ pa.style.width=advPct+'%'; pd.style.width=(100-advPct)+'%';
+    document.getElementById('pulseAdvN').textContent=`${up} advancing`;
+    document.getElementById('pulseDecN').textContent=`${dn} declining`; }
+
   // top buy table
   const top=buys.slice().sort((a,b)=>b.score-a.score||b.pctChange-a.pctChange).slice(0,8);
   document.getElementById('topBuyCt').textContent=buys.length;
@@ -1007,7 +1016,7 @@ function buildCondToggles(){
   }));
 }
 function saveCfg(){ store.set(LS.cfg, CFG); }
-function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderShort(); renderMid(); renderLong(); renderWatch(); }
+function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); }
 
 function renderScreener(){
   const body=document.getElementById('screenBody');
@@ -1092,52 +1101,87 @@ function filterRealStocks(){
 }
 function bindHorizonSearch(id, fn){ const el=document.getElementById(id); if(el && !el._bound){ el._bound=true; el.addEventListener('input',fn); } }
 
-function renderShort(){
-  const body=document.getElementById('shortBody'); if(!body) return;
-  if(!SNAP){ return; }
-  const q=(document.getElementById('shortSearch').value||'').toUpperCase().trim();
-  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
-  rows=rows.map(m=>{
-    let s=0; const T=4;
-    if(m.pct>0) s++;                                   // up day
-    if(m.volRatio!=null && m.volRatio>1) s++;          // volume surge
-    if(m.hist!=null && m.hist>0) s++;                  // momentum
-    if(m.sma20!=null && m.ltp>m.sma20) s++;            // above short MA
-    return {...m, score:s, total:T};
+/* ---------- Screener Lab: unified horizon engine ---------- */
+let HZ='short';
+const HZ_META={
+  short:{ title:'Short Term', desc:'Momentum & volume plays over days to a few weeks.',
+    notice:'<b>Short term (days – few weeks).</b> The most rumor-driven, riskiest horizon on NEPSE. Moves cluster in hot sectors (hydropower, microfinance, news stocks) and reverse fast. Watch <b>volume</b> above all — a price move without volume rarely holds. Don\'t chase a stock that already ran 20–30%. Mind T+2 settlement and daily circuit limits. <i>Educational only, not advice.</i>',
+    head:['Symbol','LTP','%Chg','Vol×','MACD','vs SMA20','Setup'] },
+  mid:{ title:'Mid Term', desc:'Positional swings over a few months to about a year.',
+    notice:'<b>Mid term (few months – ~1 year).</b> Pros watch the trend plus events: quarterly results, dividend/bonus & rights seasons, and especially <b>interest rates</b> — when bank rates fall, money rotates from deposits into shares and the market tends to rally. Catching a sector early is the game. <i>Educational only, not advice.</i>',
+    head:['Symbol','LTP','%Chg','SMA20','SMA50','Trend','Setup'] },
+  long:{ title:'Long Term', desc:'Multi-year investing — fundamentals matter more than charts.',
+    notice:'<b>Long term (multi-year) — investing.</b> Here <b>fundamentals lead</b>: EPS, P/E, P/B, ROE, dividend history, book value. Nepali investors favour well-capitalized banks, strong life-insurance, and proven hydropower — accumulating quality dividend payers during bear markets. This screen shows <b>price-trend context only</b> (the API gives limited fundamentals), so use it as a shortlist, then study each company\'s reports yourself. <i>Educational only, not advice.</i>',
+    head:['Symbol','LTP','SMA200','vs 1yr range','52w Low','52w High','Context'] }
+};
+function setupPill(score, total){
+  const c = score>=total ? 'buy' : score>=Math.ceil(total/2) ? 'hold' : 'sell';
+  const label = score>=total ? 'STRONG' : score>=Math.ceil(total/2) ? 'WATCH' : 'WEAK';
+  return `<span class="pill ${c}" title="${score}/${total} boxes">${label} ${score}/${total}</span>`;
+}
+function horizonMetrics(sym){
+  const closes = closesFor(sym);
+  const vols = volsFor(sym);
+  const r = SNAP ? SNAP.rows[sym] : null;
+  if(!r) return null;
+  const ltp = r.ltp;
+  const sma20=SMA(closes,20), sma50=SMA(closes,50), sma200=SMA(closes,200);
+  const bb=bollinger(closes,20);
+  const mc=macd(closes); const hist = mc?mc.hist:null;
+  let volRatio=null;
+  if(vols.length>=21){ const avg=vols.slice(-21,-1).reduce((a,b)=>a+b,0)/20||1; volRatio=(r.vol||0)/avg; }
+  const yr = closes.slice(-250);
+  let lo=null,hi=null,rangePos=null;
+  if(yr.length>20){ lo=Math.min(...yr); hi=Math.max(...yr); if(hi>lo) rangePos=((ltp-lo)/(hi-lo))*100; }
+  return {sym, ltp, pct:r.pct, sma20, sma50, sma200, bb, hist, volRatio, histLen:closes.length, lo, hi, rangePos};
+}
+function filterRealStocks(){
+  if(!SNAP) return [];
+  return Object.keys(SNAP.rows).filter(sym=>{
+    const r=SNAP.rows[sym];
+    const ltp=r.ltp||0;
+    if(ltp>0 && ltp<30) return false;
+    if(/D\d{2}|D8\d|D9\d|BOND|DEBENTURE|D\d{2}\/\d{2}/i.test(sym)) return false;
+    if(/(MF\d?|FUND|YOJANA|KOSH|SCHEME)$/i.test((NAME_MAP[sym]||''))) return false;
+    if(/P$|PO$|PROMOTER/i.test(sym)) return false;
+    return true;
   });
-  if(q) rows=rows.filter(m=>m.sym.includes(q));
-  rows=rows.filter(m=>m.score>=2).sort((a,b)=>b.score-a.score||b.volRatio-a.volRatio||b.pct-a.pct);
-  document.getElementById('shortCount').textContent=`${rows.length} setups`;
-  body.innerHTML = rows.length ? rows.slice(0,80).map(m=>`
-    <tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
+}
+function hzRows(which){
+  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
+  if(which==='short'){
+    rows=rows.map(m=>{ let s=0;const T=4;
+      if(m.pct>0)s++; if(m.volRatio!=null&&m.volRatio>1)s++;
+      if(m.hist!=null&&m.hist>0)s++; if(m.sma20!=null&&m.ltp>m.sma20)s++;
+      return {...m,score:s,total:T}; });
+    rows=rows.filter(m=>m.score>=2).sort((a,b)=>b.score-a.score||(b.volRatio||0)-(a.volRatio||0)||b.pct-a.pct);
+  } else if(which==='mid'){
+    rows=rows.map(m=>{ let s=0;const T=4;
+      if(m.sma50!=null&&m.ltp>m.sma50)s++;
+      if(m.sma20!=null&&m.sma50!=null&&m.sma20>m.sma50)s++;
+      if(m.hist!=null&&m.hist>0)s++;
+      if(m.bb&&m.ltp<m.bb.up*0.98)s++;
+      return {...m,score:s,total:T}; });
+    rows=rows.filter(m=>m.sma50!=null&&m.score>=2).sort((a,b)=>b.score-a.score||b.pct-a.pct);
+  } else {
+    rows=rows.filter(m=>m.histLen>=120);
+    rows.sort((a,b)=>{ const au=(a.sma200!=null&&a.ltp>a.sma200)?1:0,bu=(b.sma200!=null&&b.ltp>b.sma200)?1:0;
+      if(au!==bu)return bu-au; return (a.rangePos??50)-(b.rangePos??50); });
+  }
+  return rows;
+}
+function hzRowHtml(which,m){
+  if(which==='short'){
+    return `<tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
       <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
       <td>${fmt(m.ltp)}</td>
       <td class="${pctClass(m.pct)}">${arrow(m.pct)}${Math.abs(m.pct).toFixed(2)}%</td>
       <td class="${m.volRatio>1?'up':'dim'}">${m.volRatio!=null?m.volRatio.toFixed(2)+'×':'—'}</td>
       <td class="${m.hist>0?'up':m.hist<0?'dn':'dim'}">${m.hist!=null?fmt(m.hist):'—'}</td>
       <td class="${m.sma20!=null&&m.ltp>m.sma20?'up':'dim'}">${m.sma20!=null?(m.ltp>m.sma20?'above':'below'):'—'}</td>
-      <td>${setupPill(m.score,m.total)}</td>
-    </tr>`).join('') : `<tr><td colspan="7" class="empty fs-sm">No short-term setups right now. Backfill history if columns are blank.</td></tr>`;
-}
-
-function renderMid(){
-  const body=document.getElementById('midBody'); if(!body) return;
-  if(!SNAP){ return; }
-  const q=(document.getElementById('midSearch').value||'').toUpperCase().trim();
-  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
-  rows=rows.map(m=>{
-    let s=0; const T=4;
-    if(m.sma50!=null && m.ltp>m.sma50) s++;                       // above medium MA
-    if(m.sma20!=null && m.sma50!=null && m.sma20>m.sma50) s++;    // uptrend stack
-    if(m.hist!=null && m.hist>0) s++;                             // momentum
-    if(m.bb && m.ltp < m.bb.up*0.98) s++;                        // not pinned to top band
-    return {...m, score:s, total:T};
-  });
-  if(q) rows=rows.filter(m=>m.sym.includes(q));
-  rows=rows.filter(m=>m.sma50!=null && m.score>=2).sort((a,b)=>b.score-a.score||b.pct-a.pct);
-  document.getElementById('midCount').textContent=`${rows.length} in uptrend`;
-  body.innerHTML = rows.length ? rows.slice(0,80).map(m=>{
-    const stack = (m.sma20!=null&&m.sma50!=null&&m.sma20>m.sma50);
+      <td>${setupPill(m.score,m.total)}</td></tr>`;
+  } else if(which==='mid'){
+    const stack=(m.sma20!=null&&m.sma50!=null&&m.sma20>m.sma50);
     return `<tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
       <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
       <td>${fmt(m.ltp)}</td>
@@ -1145,29 +1189,11 @@ function renderMid(){
       <td class="${m.sma20!=null&&m.ltp>m.sma20?'up':'dim'}">${fmt(m.sma20)}</td>
       <td class="${m.sma50!=null&&m.ltp>m.sma50?'up':'dim'}">${fmt(m.sma50)}</td>
       <td class="${stack?'up':'dim'}">${stack?'rising':'flat/down'}</td>
-      <td>${setupPill(m.score,m.total)}</td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="7" class="empty fs-sm">No mid-term uptrends found, or not enough history (need ≥50 days). Backfill in Data &amp; History.</td></tr>`;
-}
-
-function renderLong(){
-  const body=document.getElementById('longBody'); if(!body) return;
-  if(!SNAP){ return; }
-  const q=(document.getElementById('longSearch').value||'').toUpperCase().trim();
-  let rows=filterRealStocks().map(horizonMetrics).filter(Boolean);
-  rows=rows.filter(m=>m.histLen>=120); // need substantial history for long-term context
-  if(q) rows=rows.filter(m=>m.sym.includes(q));
-  // sort: primary uptrend first, then cheaper within range (lower rangePos = better value)
-  rows.sort((a,b)=>{
-    const au=(a.sma200!=null&&a.ltp>a.sma200)?1:0, bu=(b.sma200!=null&&b.ltp>b.sma200)?1:0;
-    if(au!==bu) return bu-au;
-    return (a.rangePos??50)-(b.rangePos??50);
-  });
-  document.getElementById('longCount').textContent=`${rows.length} with long history`;
-  body.innerHTML = rows.length ? rows.slice(0,120).map(m=>{
-    const upTrend = m.sma200!=null && m.ltp>m.sma200;
-    const ctx = m.sma200==null ? 'building history' : (upTrend ? 'above SMA200' : 'below SMA200');
-    const cls = m.sma200==null ? 'dim' : (upTrend?'up':'dn');
+      <td>${setupPill(m.score,m.total)}</td></tr>`;
+  } else {
+    const upTrend=m.sma200!=null&&m.ltp>m.sma200;
+    const ctx=m.sma200==null?'building':(upTrend?'above SMA200':'below SMA200');
+    const cls=m.sma200==null?'hold':(upTrend?'buy':'sell');
     return `<tr style="cursor:pointer" onclick="openDetail('${m.sym}')">
       <td><span class="sym">${m.sym}<small>${nm(m.sym)}</small></span></td>
       <td>${fmt(m.ltp)}</td>
@@ -1175,9 +1201,28 @@ function renderLong(){
       <td>${m.rangePos!=null?m.rangePos.toFixed(0)+'%':'—'}</td>
       <td class="dim">${m.lo!=null?fmt(m.lo):'—'}</td>
       <td class="dim">${m.hi!=null?fmt(m.hi):'—'}</td>
-      <td><span class="pill ${cls==='up'?'buy':cls==='dn'?'sell':'hold'}">${ctx}</span></td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="7" class="empty fs-sm">Not enough history yet. Backfill a year of data in Data &amp; History for long-term context.</td></tr>`;
+      <td><span class="pill ${cls}">${ctx}</span></td></tr>`;
+  }
+}
+function renderHorizon(){
+  const meta=HZ_META[HZ];
+  const tEl=document.getElementById('hzTitle'), dEl=document.getElementById('hzDesc'),
+        nEl=document.getElementById('hzNotice'), hEl=document.getElementById('hzHead'),
+        bEl=document.getElementById('hzBody'), cEl=document.getElementById('hzCount');
+  if(!tEl) return;
+  tEl.textContent=meta.title; dEl.textContent=meta.desc;
+  nEl.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>${meta.notice}</span>`;
+  hEl.innerHTML=meta.head.map(h=>`<th>${h}</th>`).join('');
+  document.querySelectorAll('#hzSeg button').forEach(b=>b.classList.toggle('on',b.dataset.h===HZ));
+  if(!SNAP){ bEl.innerHTML=`<tr><td colspan="7" class="empty"><b>No data yet</b>Fetch latest data on the Dashboard first.</td></tr>`; cEl.textContent='—'; return; }
+  const q=(document.getElementById('hzSearch').value||'').toUpperCase().trim();
+  let rows=hzRows(HZ);
+  if(q) rows=rows.filter(m=>m.sym.includes(q));
+  const labelN = HZ==='short'?'setups': HZ==='mid'?'in uptrend':'with long history';
+  cEl.textContent=`${rows.length} ${labelN}`;
+  const limit = HZ==='long'?120:80;
+  bEl.innerHTML = rows.length ? rows.slice(0,limit).map(m=>hzRowHtml(HZ,m)).join('')
+    : `<tr><td colspan="7" class="empty fs-sm">Nothing matches yet. If indicator columns are blank, backfill a year of history in Data &amp; History.</td></tr>`;
 }
 
 /* ---------- Watchlist ---------- */
@@ -1209,7 +1254,7 @@ function drawSpark(id, closes){
   if(CHARTS[id]) CHARTS[id].destroy();
   const data=closes.slice(-60);
   const up=data.length>1 && data[data.length-1]>=data[0];
-  CHARTS[id]=new Chart(el,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:up?'#1FCB7A':'#FF5A6E',borderWidth:1.8,pointRadius:0,tension:.25,fill:true,backgroundColor:up?'rgba(31,203,122,.08)':'rgba(255,90,110,.08)'}]},
+  CHARTS[id]=new Chart(el,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:up?'#2BB673':'#F25F5C',borderWidth:1.8,pointRadius:0,tension:.25,fill:true,backgroundColor:up?'rgba(43,182,115,.08)':'rgba(242,95,92,.08)'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true,callbacks:{label:c=>'Rs '+fmt(c.parsed.y)}}},scales:{x:{display:false},y:{display:false}}}});
 }
 function rmWatch(sym){ WATCH=WATCH.filter(s=>s!==sym); store.set(LS.watch,WATCH); renderWatch(); }
@@ -1297,7 +1342,7 @@ function openDetail(sym){
   const mb=document.getElementById('detailModalBg');
   mb.innerHTML=html; mb.classList.add('on');
   setTimeout(()=>{ const d=closes.slice(-90); const up=d.length>1&&d[d.length-1]>=d[0];
-    new Chart(document.getElementById('detailChart'),{type:'line',data:{labels:d.map((_,i)=>i),datasets:[{data:d,borderColor:up?'#1FCB7A':'#FF5A6E',borderWidth:2,pointRadius:0,tension:.2,fill:true,backgroundColor:up?'rgba(31,203,122,.07)':'rgba(255,90,110,.07)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rs '+fmt(c.parsed.y)}}},scales:{x:{display:false},y:{display:false}}}});
+    new Chart(document.getElementById('detailChart'),{type:'line',data:{labels:d.map((_,i)=>i),datasets:[{data:d,borderColor:up?'#2BB673':'#F25F5C',borderWidth:2,pointRadius:0,tension:.2,fill:true,backgroundColor:up?'rgba(43,182,115,.07)':'rgba(242,95,92,.07)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rs '+fmt(c.parsed.y)}}},scales:{x:{display:false},y:{display:false}}}});
   },30);
 }
 function closeModal(){ document.getElementById('detailModalBg').classList.remove('on'); }
@@ -1387,14 +1432,11 @@ function switchTab(v){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   if(v==='watch') renderWatch();
-  if(v==='short') renderShort();
-  if(v==='mid') renderMid();
-  if(v==='long') renderLong();
+  if(v==='horizon') renderHorizon();
 }
 document.getElementById('tabs').addEventListener('click',e=>{ if(e.target.dataset.v) switchTab(e.target.dataset.v); });
-bindHorizonSearch('shortSearch', renderShort);
-bindHorizonSearch('midSearch', renderMid);
-bindHorizonSearch('longSearch', renderLong);
+document.getElementById('hzSeg').addEventListener('click',e=>{ if(e.target.dataset.h){ HZ=e.target.dataset.h; renderHorizon(); } });
+(function(){ const s=document.getElementById('hzSearch'); if(s) s.addEventListener('input',renderHorizon); })();
 
 document.getElementById('refreshBtn').addEventListener('click',fetchLatest);
 document.getElementById('loadDemoBtn').addEventListener('click',loadDemo);
