@@ -834,8 +834,14 @@ async function fetchLatest(){
       if(Array.isArray(ix)){ v=ix.find(o=>/nepse/i.test(o.index||o.name||''))||ix[0]; }
       else if(ix && typeof ix==='object'){ v=ix['NEPSE Index']||ix['NEPSE']||Object.values(ix).find(o=>o&&/nepse/i.test(o.index||o.name||''))||ix; }
       if(v){
-        index=parseFloat(v.close||v.currentValue||v.value||v.lastValue)||null;
-        indexCh=parseFloat(v.perChange||v.percentageChange||v.change)||null;
+        // This API mislabels fields: `close` actually holds the PREVIOUS value (it's higher than
+        // currentValue even on a down day). `currentValue` is today's real index — confirmed because
+        // (currentValue vs close) reproduces the reported perChange. So always prefer currentValue.
+        let val = parseFloat(v.currentValue);
+        if(isNaN(val)) val = parseFloat(v.value||v.lastValue||v.close);
+        index = !isNaN(val) ? val : null;
+        indexCh = parseFloat(v.perChange||v.percentageChange||v.change);
+        if(isNaN(indexCh)) indexCh = null;
       }
     }catch(e){}
     try{ const sm=await jget('/Summary'); turnover=parseFloat((sm['Total Turnover Rs:']||sm.totalTurnover||sm.turnover||'').toString().replace(/,/g,''))||null; }catch(e){}
