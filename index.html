@@ -564,11 +564,15 @@ footer b{color:var(--muted)}
     </div>
 
     <div class="card" style="margin-top:14px">
-      <div class="section-title">Backfill history from API <span class="muted fs-sm" style="font-weight:400">— makes SMA / MACD / buy signals work instantly</span></div>
-      <p class="fs-sm dim" style="margin-bottom:12px">Pulls up to a year of daily prices for every stock from your API's <span class="mono" style="color:var(--accent)">PriceVolumeHistory</span> endpoint. Run this once. It goes slowly (a small pause between stocks) to respect the API rate limit, so it may take a few minutes. Keep this tab open while it runs.</p>
+      <div class="section-title">History backfill <span class="muted fs-sm" style="font-weight:400">— powers SMA / MACD / buy signals</span></div>
+      <p class="fs-sm dim" style="margin-bottom:12px">Daily prices come from your API's <span class="mono" style="color:var(--accent)">PriceVolumeHistory</span> endpoint. With <b>Auto-backfill on</b>, the app fills any missing history by itself after each fetch and tops it up daily — the first full run takes a few minutes (once), then it's instant. It pauses if you leave this tab and resumes when you return. You can also run it manually below.</p>
+      <div class="cond" style="margin-bottom:12px;max-width:340px">
+        <div class="cond-label"><b>Auto-backfill</b><span>Fill missing history automatically</span></div>
+        <label class="sw"><input type="checkbox" id="autoBfToggle" checked><span class="track"></span></label>
+      </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button class="btn primary" id="backfillBtn">Backfill all history</button>
-        <button class="btn ghost" id="backfillStopBtn" style="display:none">Stop</button>
+        <button class="btn primary" id="backfillBtn">Backfill now</button>
+        <button class="btn ghost" id="backfillStopBtn" style="display:none">Pause</button>
         <span class="fs-sm" id="backfillStatus"></span>
       </div>
       <div id="backfillBarWrap" style="display:none;margin-top:12px;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden">
@@ -627,6 +631,7 @@ const LS = {
   cfg:   'nepse_cfg_v1',       // screener config
   snap:  'nepse_snap_v1',      // last fetched snapshot { ts, index, indexCh, turnover, rows:{SYM:{ltp,pct,vol,open,high,low,prevClose}} }
   api:   'nepse_api_v1',       // { url, proxy }
+  autobf:'nepse_autobf_v1',    // auto-backfill enabled (default true)
 };
 const store = {
   get(k, def){ try{ const v = localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } },
@@ -848,6 +853,7 @@ async function fetchLatest(){
     store.set(LS.snap, SNAP);
     appendSnapshotToHistory();
     afterData('live');
+    autoBackfillMaybe();   // quietly top up any missing history in the background
   }catch(err){
     console.error(err);
     setStatus('err','API failed');
@@ -1375,9 +1381,11 @@ function importCsv(text){
 
 /* ---------- Backfill history from API (PriceVolumeHistory per symbol) ---------- */
 let BACKFILL_STOP=false;
+let BACKFILL_RUNNING=false;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const HIST_TARGET=200;            // days of history we consider "complete enough"
+const HIST_STALE_DAYS=5;          // if newest point older than this, treat as needing top-up
 function mergeHistoryRows(sym, rows){
-  // rows: array of {businessDate, closePrice, totalTradedQuantity}
   HISTORY[sym]=HISTORY[sym]||[];
   const byDate={}; HISTORY[sym].forEach(x=>byDate[x.d]=x);
   let added=0;
@@ -1392,38 +1400,84 @@ function mergeHistoryRows(sym, rows){
   if(HISTORY[sym].length>400) HISTORY[sym]=HISTORY[sym].slice(-400);
   return added;
 }
-async function backfillHistory(){
-  if(!SNAP || !Object.keys(SNAP.rows).length){ return {err:'Fetch latest data first so the app knows which stocks exist.'}; }
-  BACKFILL_STOP=false;
-  const syms=Object.keys(SNAP.rows).sort();
-  const total=syms.length;
+// does this symbol still need backfilling?
+function needsBackfill(sym){
+  const h=HISTORY[sym];
+  if(!h || h.length<HIST_TARGET) return true;          // not enough history yet
+  return false;                                        // enough — daily top-up handled by snapshot
+}
+// build the work queue: missing stocks only, watchlist & portfolio first
+function backfillQueue(){
+  if(!SNAP) return [];
+  const all=Object.keys(SNAP.rows);
+  const priority=new Set([...(WATCH||[]), ...((PORT||[]).map(p=>p.sym||p.symbol).filter(Boolean))]);
+  const need=all.filter(needsBackfill);
+  const pri=need.filter(s=>priority.has(s)).sort();
+  const rest=need.filter(s=>!priority.has(s)).sort();
+  return [...pri, ...rest];
+}
+function updateBackfillUI(text, cls, pct, running){
   const statusEl=document.getElementById('backfillStatus');
   const barWrap=document.getElementById('backfillBarWrap'), bar=document.getElementById('backfillBar');
   const btn=document.getElementById('backfillBtn'), stopBtn=document.getElementById('backfillStopBtn');
-  barWrap.style.display='block'; btn.disabled=true; stopBtn.style.display='inline-flex';
-  let ok=0, fail=0;
+  if(statusEl){ statusEl.textContent=text; statusEl.className='fs-sm '+(cls||'muted'); }
+  if(barWrap) barWrap.style.display = running?'block':'none';
+  if(bar && pct!=null) bar.style.width=Math.round(pct)+'%';
+  if(btn) btn.disabled=!!running;
+  if(stopBtn) stopBtn.style.display = running?'inline-flex':'none';
+}
+// core runner — processes the queue, pausing if tab hidden, saving as it goes
+async function runBackfill({auto=false}={}){
+  if(BACKFILL_RUNNING) return {already:true};
+  if(!SNAP || !Object.keys(SNAP.rows).length){
+    if(!auto) updateBackfillUI('Fetch latest data first so the app knows which stocks exist.','dn',null,false);
+    return {err:'no data'};
+  }
+  const queue=backfillQueue();
+  if(!queue.length){
+    updateBackfillUI('✓ History is up to date — nothing to backfill.','up',100,false);
+    return {ok:0, done:true};
+  }
+  BACKFILL_RUNNING=true; BACKFILL_STOP=false;
+  const total=queue.length; let ok=0, fail=0;
   for(let i=0;i<total;i++){
-    if(BACKFILL_STOP){ statusEl.textContent='Stopped at '+i+'/'+total+'. Progress saved.'; statusEl.className='fs-sm'; break; }
-    const sym=syms[i];
-    statusEl.textContent=`Fetching ${sym}… (${i+1}/${total}) · ${ok} done`;
-    statusEl.className='fs-sm muted';
+    if(BACKFILL_STOP){ updateBackfillUI(`Paused at ${i}/${total}. Progress saved — it will resume automatically.`,'',((i)/total)*100,false); break; }
+    // if tab is hidden, pause politely and stop the loop; visibilitychange will resume
+    if(document.hidden && auto){ updateBackfillUI(`Paused (tab inactive) at ${i}/${total}. Resumes when you return.`,'',((i)/total)*100,false); break; }
+    const sym=queue[i];
+    updateBackfillUI(`${auto?'Auto-filling':'Fetching'} ${sym}… (${i+1}/${total})${ok?' · '+ok+' done':''}`,'muted',((i+1)/total)*100,true);
     try{
       const data=await jget('/PriceVolumeHistory?symbol='+encodeURIComponent(sym));
       const rows=Array.isArray(data)?data:(data&&Array.isArray(data.content)?data.content:null);
-      if(rows&&rows.length){ mergeHistoryRows(sym, rows); ok++; }
-      else fail++;
+      if(rows&&rows.length){ mergeHistoryRows(sym, rows); ok++; } else fail++;
     }catch(e){ fail++; }
-    bar.style.width=Math.round(((i+1)/total)*100)+'%';
-    // save periodically so progress survives interruptions
-    if(i%10===0) store.set(LS.hist,HISTORY);
-    await sleep(1100); // ~55 req/min, under the 60/min limit
+    if(i%8===0) store.set(LS.hist,HISTORY);
+    await sleep(1100);
   }
   store.set(LS.hist,HISTORY);
-  btn.disabled=false; stopBtn.style.display='none';
-  if(!BACKFILL_STOP){ statusEl.textContent=`✓ Done. ${ok} stocks backfilled${fail?', '+fail+' had no data':''}.`; statusEl.className='fs-sm up'; }
+  BACKFILL_RUNNING=false;
+  const remaining=backfillQueue().length;
+  if(!BACKFILL_STOP && !document.hidden){
+    if(remaining===0) updateBackfillUI(`✓ Done. History complete${fail?' ('+fail+' had no data)':''}.`,'up',100,false);
+    else updateBackfillUI(`Filled ${ok}. ${remaining} stocks still need history — will continue.`,'',null,false);
+  }
   renderHistStats(); recompute();
-  return {ok,fail};
+  return {ok, fail, remaining};
 }
+// manual button entry point
+async function backfillHistory(){ return runBackfill({auto:false}); }
+// auto entry point — only runs if something is incomplete, and respects a user toggle
+function autoBackfillMaybe(){
+  if(store.get(LS.autobf, true)===false) return;        // user turned it off
+  if(BACKFILL_RUNNING) return;
+  const remaining=backfillQueue().length;
+  if(remaining>0){
+    updateBackfillUI(`Auto-backfill: ${remaining} stocks need history. Starting…`,'muted',null,false);
+    runBackfill({auto:true});
+  }
+}
+// resume automatically when the tab becomes visible again
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) autoBackfillMaybe(); });
 
 /* ============================================================
    WIRING
@@ -1502,11 +1556,15 @@ document.getElementById('csvTemplateBtn').addEventListener('click',()=>{
   dl('nepse_history_template.csv',csv);
 });
 document.getElementById('backfillBtn').addEventListener('click',async()=>{
-  const statusEl=document.getElementById('backfillStatus');
   const out=await backfillHistory();
-  if(out&&out.err){ statusEl.textContent=out.err; statusEl.className='fs-sm dn'; }
+  if(out&&out.err){ updateBackfillUI('Fetch latest data first so the app knows which stocks exist.','dn',null,false); }
 });
 document.getElementById('backfillStopBtn').addEventListener('click',()=>{ BACKFILL_STOP=true; });
+(function(){
+  const t=document.getElementById('autoBfToggle');
+  if(t){ t.checked = store.get(LS.autobf, true)!==false;
+    t.addEventListener('change',()=>{ store.set(LS.autobf, t.checked); if(t.checked) autoBackfillMaybe(); }); }
+})();
 document.getElementById('exportBtn').addEventListener('click',()=>{
   const blob={history:HISTORY,watch:WATCH,portfolio:PORT,config:CFG,exported:new Date().toISOString()};
   dl('nepse_terminal_backup.json',JSON.stringify(blob,null,2));
