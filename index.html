@@ -181,6 +181,21 @@ input[type=range]{accent-color:var(--accent);width:120px}
 }
 .search:focus{outline:none;border-color:var(--accent)}
 
+/* ---------- Range filter panel ---------- */
+.rangepanel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.rangepanel .rp-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.rangepanel .rp-head h4{margin:0;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;font-family:'Inter Tight',sans-serif}
+.rangepanel .rp-head .chev{transition:transform .18s;color:var(--muted)}
+.rangepanel.open .rp-head .chev{transform:rotate(90deg)}
+.rangepanel .rp-active{font-size:10.5px;color:var(--accent);font-weight:600;font-family:'Roboto Mono',monospace}
+.rangepanel .rp-body{display:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:4px 14px 14px}
+.rangepanel.open .rp-body{display:grid}
+.rfield label{display:block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);margin-bottom:5px;font-family:'Inter Tight',sans-serif}
+.rfield .rr2{display:flex;align-items:center;gap:6px}
+.rfield input{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;color:var(--txt);font-size:12px;font-family:'Roboto Mono',monospace}
+.rfield input:focus{outline:none;border-color:var(--accent)}
+.rfield .dash{color:var(--dim);font-size:12px}
+
 /* ---------- Tables ---------- */
 .tbl-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -201,6 +216,18 @@ tbody tr:last-child td{border-bottom:none}
 .pill.buy{background:var(--buy-dim);color:var(--buy)}
 .pill.sell{background:var(--sell-dim);color:var(--sell)}
 .pill.hold{background:#26313d;color:var(--muted)}
+/* circuit status chips */
+.cc{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.3px;font-family:'Roboto Mono',monospace;white-space:nowrap}
+.cc.open{background:#26313d;color:var(--muted)}
+.cc.near-uc{background:var(--buy-dim);color:var(--buy)}
+.cc.uc{background:var(--buy);color:#04140c}
+.cc.near-lc{background:var(--sell-dim);color:var(--sell)}
+.cc.lc{background:var(--sell);color:#1a0606}
+/* divergence chips */
+.dv{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.3px;font-family:'Inter Tight',sans-serif;white-space:nowrap}
+.dv.bullish{background:var(--buy-dim);color:var(--buy)}
+.dv.bearish{background:var(--sell-dim);color:var(--sell)}
+.dv.none{color:var(--dim)}
 .score-bar{display:inline-flex;gap:2px;vertical-align:middle}
 .score-bar i{width:5px;height:13px;border-radius:1px;background:#2A323D;display:inline-block}
 .score-bar i.f{background:var(--accent)}
@@ -352,6 +379,7 @@ footer b{color:var(--muted)}
     <button data-v="dash" class="on">Dashboard</button>
     <button data-v="screen">Buy Screener</button>
     <button data-v="horizon">Screener Lab</button>
+    <button data-v="sectors">Sectors</button>
     <button data-v="watch">Watchlist</button>
     <button data-v="port">Portfolio</button>
     <button data-v="data">Data &amp; History</button>
@@ -432,8 +460,20 @@ footer b{color:var(--muted)}
     <div class="bar">
       <input class="search" id="screenSearch" placeholder="Filter by symbol…">
       <button class="btn" id="onlyBuyBtn">Show BUY only</button>
+      <button class="btn" id="divFilterBtn" title="Cycle: all → bullish divergence → bearish divergence">Divergence: all</button>
       <div class="spacer"></div>
       <span class="fs-sm dim" id="screenCount">—</span>
+    </div>
+
+    <div class="rangepanel" id="screenRange">
+      <div class="rp-head" data-toggle="screenRange">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        <h4>Range filters</h4>
+        <div class="spacer" style="flex:1"></div>
+        <span class="rp-active" id="screenRangeActive"></span>
+        <button class="btn ghost fs-sm" id="screenRangeClear" style="margin-left:8px">Clear</button>
+      </div>
+      <div class="rp-body" id="screenRangeBody"></div>
     </div>
 
     <div class="notice" id="historyWarn" style="display:none">
@@ -452,10 +492,12 @@ footer b{color:var(--muted)}
           <th data-k="macdHist">MACD</th>
           <th data-k="volRatio">Vol×</th>
           <th data-k="pivot">Pivot</th>
+          <th data-k="roomUp">Circuit</th>
+          <th data-k="divType">Divergence</th>
           <th data-k="score">Score</th>
           <th data-k="signal">Signal</th>
         </tr></thead>
-        <tbody id="screenBody"><tr><td colspan="10" class="empty"><b>No data</b>Go to Dashboard and fetch latest data first.</td></tr></tbody>
+        <tbody id="screenBody"><tr><td colspan="12" class="empty"><b>No data</b>Go to Dashboard and fetch latest data first.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -481,12 +523,60 @@ footer b{color:var(--muted)}
       <div class="spacer"></div>
       <span class="fs-sm dim" id="hzCount">—</span>
     </div>
+
+    <div class="rangepanel" id="hzRange">
+      <div class="rp-head" data-toggle="hzRange">
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+        <h4>Range filters</h4>
+        <div class="spacer" style="flex:1"></div>
+        <span class="rp-active" id="hzRangeActive"></span>
+        <button class="btn ghost fs-sm" id="hzRangeClear" style="margin-left:8px">Clear</button>
+      </div>
+      <div class="rp-body" id="hzRangeBody"></div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="hzHead"></tr></thead>
         <tbody id="hzBody"><tr><td colspan="7" class="empty"><b>No data yet</b>Fetch latest data on the Dashboard, then backfill a year of history in Data &amp; History so the indicators can compute.</td></tr></tbody>
       </table>
     </div>
+  </section>
+
+  <!-- ============ SECTORS ============ -->
+  <section class="view" id="v-sectors">
+    <div class="bar">
+      <input class="search" id="secSearch" placeholder="Filter by sector…">
+      <button class="btn" id="secFetchBtn">Fetch sector map</button>
+      <div class="spacer"></div>
+      <span class="fs-sm dim" id="secCount">—</span>
+    </div>
+    <div class="notice" id="secNotice" style="display:none"></div>
+
+    <div id="secSubWrap" style="display:none;margin-bottom:18px">
+      <div class="section-title fs-sm">NEPSE Sub-indices (official sector indices)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Sector Index</th><th>Value</th><th>Change</th><th>%</th></tr></thead>
+          <tbody id="secSubBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-title fs-sm">Sector breakdown (from latest snapshot)</div>
+    <div class="tbl-wrap">
+      <table id="secTable">
+        <thead><tr>
+          <th data-sk="sector">Sector</th>
+          <th data-sk="count">Stocks</th>
+          <th data-sk="avgPct">Avg %Chg</th>
+          <th data-sk="breadth">Adv / Dec</th>
+          <th data-sk="turnover">Turnover</th>
+          <th data-sk="topMover">Top mover</th>
+        </tr></thead>
+        <tbody id="secBody"><tr><td colspan="6" class="empty"><b>No sector data yet</b>Fetch latest data on the Dashboard, then click “Fetch sector map” above (needed once; cached after).</td></tr></tbody>
+      </table>
+    </div>
+    <p class="fs-sm dim" style="margin-top:10px">Sector map is fetched once and cached locally. Aggregates are computed from your last market snapshot — no extra per-stock calls. Click a sector to see its stocks. <i>Educational only, not advice.</i></p>
   </section>
 
   <!-- ============ WATCHLIST ============ -->
@@ -591,6 +681,14 @@ footer b{color:var(--muted)}
         <b style="color:var(--buy)">Trend</b>: today closed higher than yesterday.
         When the number of met conditions reaches your threshold, the stock shows <span class="pill buy">BUY</span>.
       </p>
+      <div class="section-title" style="margin-top:16px">Divergence (RSI)</div>
+      <p class="fs-sm muted" style="line-height:1.8">
+        Divergence is when price and momentum (RSI) disagree — an early hint that a trend may be tiring.
+        <b style="color:var(--buy)">▲ Bullish divergence</b>: price makes a <i>lower low</i> but RSI makes a <i>higher low</i> — selling pressure is easing, a bounce may be near.
+        <b style="color:var(--sell)">▼ Bearish divergence</b>: price makes a <i>higher high</i> but RSI makes a <i>lower high</i> — the rally is losing steam.
+        The dots (●–●●●) show how strong the gap is. Use the <b>Divergence</b> column and the "Divergence" filter in the Buy Screener to find these setups.
+        <b>Important:</b> divergence is a <i>watch</i> signal, not an automatic buy or sell. It works best at the end of a clear, extended trend and is unreliable in choppy or thin trading — and NEPSE has plenty of both. Always confirm with volume, price action, and the floorsheet before acting. Needs ~40+ days of history to compute, so newly tracked stocks show "—". <i>Educational only, not advice.</i>
+      </p>
     </div>
   </section>
 </div>
@@ -632,6 +730,7 @@ const LS = {
   snap:  'nepse_snap_v1',      // last fetched snapshot { ts, index, indexCh, turnover, rows:{SYM:{ltp,pct,vol,open,high,low,prevClose}} }
   api:   'nepse_api_v1',       // { url, proxy }
   autobf:'nepse_autobf_v1',    // auto-backfill enabled (default true)
+  sectors:'nepse_sectors_v1',  // { ts, map:{SYM:sectorName}, sub:[{name,index,ch,pct}] }
 };
 const store = {
   get(k, def){ try{ const v = localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } },
@@ -642,6 +741,7 @@ let HISTORY = store.get(LS.hist, {});
 let WATCH   = store.get(LS.watch, []);
 let PORT    = store.get(LS.port, []);
 let SNAP    = store.get(LS.snap, null);
+let SECTORS = store.get(LS.sectors, null); // {ts, map:{SYM:sector}, sub:[...]}
 let CFG = Object.assign({
   sma:50, bb:20, minCond:4, volLookback:20,
   cond:{ sma:true, bb:true, macd:true, vol:true, pivot:true, trend:true }
@@ -649,6 +749,7 @@ let CFG = Object.assign({
 
 let COMPUTED = [];        // array of computed stock rows
 let screenOnlyBuy = false;
+let divFilter = 'all'; // 'all' | 'bullish' | 'bearish'
 let sortKey = 'score', sortDir = -1;
 
 /* ---------- Indicator math ---------- */
@@ -677,11 +778,93 @@ function macd(closes){
   const m=macdLine[macdLine.length-1], s=sig[sig.length-1];
   return {macd:m, signal:s, hist:m-s};
 }
+// Full RSI series (Wilder smoothing), aligned to the tail of `closes`.
+// Returns array of RSI values; out[i] corresponds to closes[i+period].
+function rsiSeries(closes, period=14){
+  if(closes.length<period+1) return [];
+  let gain=0, loss=0;
+  for(let i=1;i<=period;i++){ const d=closes[i]-closes[i-1]; if(d>=0) gain+=d; else loss-=d; }
+  let avgG=gain/period, avgL=loss/period;
+  const out=[ avgL===0?100:100-100/(1+avgG/avgL) ];
+  for(let i=period+1;i<closes.length;i++){
+    const d=closes[i]-closes[i-1]; const g=d>0?d:0, l=d<0?-d:0;
+    avgG=(avgG*(period-1)+g)/period; avgL=(avgL*(period-1)+l)/period;
+    out.push( avgL===0?100:100-100/(1+avgG/avgL) );
+  }
+  return out;
+}
+function RSI(closes, period=14){ const s=rsiSeries(closes,period); return s.length?s[s.length-1]:null; }
+// Full MACD-line series (the fast-slow EMA difference), tail-aligned.
+function macdLineSeries(closes){
+  if(closes.length<26) return [];
+  const e12=emaSeries(closes,12), e26=emaSeries(closes,26);
+  const off=e12.length-e26.length;
+  const line=[]; for(let i=0;i<e26.length;i++) line.push(e12[i+off]-e26[i]);
+  return line;
+}
 // Fibonacci pivot from prev day high/low/close
 function fibPivot(h,l,c){
   if(h==null||l==null||c==null) return null;
   const p=(h+l+c)/3, r=h-l;
   return { p, r1:p+0.382*r, r2:p+0.618*r, s1:p-0.382*r, s2:p-0.618*r };
+}
+
+/* ---------- Divergence detection ----------
+   Divergence = price and a momentum oscillator (RSI here) disagree.
+     Regular BULLISH : price makes a LOWER low,  but RSI makes a HIGHER low  → momentum turning up
+     Regular BEARISH : price makes a HIGHER high, but RSI makes a LOWER high → momentum fading
+   This is an EARLY-WARNING signal, not a trade trigger. On NEPSE (thin, circuit-limited,
+   rumor-driven) it produces more false positives than in liquid markets, so it is surfaced
+   as a "watch" flag to confirm with price action + volume — never auto buy/sell.            */
+
+// Find swing pivots (local highs/lows) in a series. `lb` = bars on each side that must be lower/higher.
+function swings(arr, lb=3){
+  const highs=[], lows=[];
+  for(let i=lb;i<arr.length-lb;i++){
+    let isHi=true, isLo=true;
+    for(let j=i-lb;j<=i+lb;j++){ if(j===i) continue; if(arr[j]>=arr[i]) isHi=false; if(arr[j]<=arr[i]) isLo=false; }
+    if(isHi) highs.push({i, v:arr[i]});
+    if(isLo) lows.push({i, v:arr[i]});
+  }
+  return {highs, lows};
+}
+
+// Detect regular divergence between price closes and RSI over the recent window.
+// Returns null, or { type:'bullish'|'bearish', strength:0..1, rsiNow, note }.
+function detectDivergence(closes){
+  if(closes.length<40) return null;            // need a meaningful window
+  const win = closes.slice(-60);               // look back ~60 trading days
+  const rsi = rsiSeries(win, 14);
+  if(rsi.length<20) return null;
+  const off = win.length - rsi.length;         // align RSI index → price index
+  // require recent extreme so we're near the end of a move (sources: divergence best at trend ends)
+  const rsiNow = rsi[rsi.length-1];
+
+  const pS = swings(win, 3);
+  // map price swing index → RSI value at same bar (skip if before RSI starts)
+  const atRsi = pi => { const ri = pi - off; return (ri>=0 && ri<rsi.length) ? rsi[ri] : null; };
+
+  // BEARISH: last two price HIGHS rising, RSI highs falling
+  if(pS.highs.length>=2){
+    const a=pS.highs[pS.highs.length-2], b=pS.highs[pS.highs.length-1];
+    const ra=atRsi(a.i), rb=atRsi(b.i);
+    if(ra!=null && rb!=null && b.v>a.v && rb<ra && (b.i>=win.length-12)){
+      const strength=Math.min(1,(ra-rb)/15);   // bigger RSI drop = stronger
+      return {type:'bearish', strength:+strength.toFixed(2), rsiNow:+rsiNow.toFixed(1),
+        note:'Price higher high, RSI lower high — momentum fading'};
+    }
+  }
+  // BULLISH: last two price LOWS falling, RSI lows rising
+  if(pS.lows.length>=2){
+    const a=pS.lows[pS.lows.length-2], b=pS.lows[pS.lows.length-1];
+    const ra=atRsi(a.i), rb=atRsi(b.i);
+    if(ra!=null && rb!=null && b.v<a.v && rb>ra && (b.i>=win.length-12)){
+      const strength=Math.min(1,(rb-ra)/15);
+      return {type:'bullish', strength:+strength.toFixed(2), rsiNow:+rsiNow.toFixed(1),
+        note:'Price lower low, RSI higher low — selling pressure easing'};
+    }
+  }
+  return null;
 }
 
 /* ---------- Build history series for a symbol (incl. today's snapshot) ---------- */
@@ -709,6 +892,31 @@ function volsFor(sym){
 }
 
 /* ---------- Compute one stock's indicators + score ---------- */
+// NEPSE daily individual-stock price limit: 15% from previous close
+// (raised from 10% on ~20 Apr 2026 under the Securities Trading Operation
+//  Fourth Amendment. Pre-open band 5%; market-wide breaker two-tier 5%/8%.)
+const CIRCUIT_LIMIT = 0.15;
+// Given previous close and current price, return circuit context.
+//   uc/lc      = upper / lower circuit price (prevClose ± 15%)
+//   roomUp     = % move still available before hitting UC (0 = locked up)
+//   roomDown   = % move still available before hitting LC
+//   state      = 'uc' (locked upper) | 'lc' (locked lower) | 'near-uc' | 'near-lc' | 'open'
+function circuitInfo(prevClose, ltp){
+  if(prevClose==null || prevClose<=0 || ltp==null) return null;
+  const uc = prevClose*(1+CIRCUIT_LIMIT);
+  const lc = prevClose*(1-CIRCUIT_LIMIT);
+  // headroom as % of current price still available before the band edge
+  const roomUp   = ((uc-ltp)/ltp)*100;
+  const roomDown = ((ltp-lc)/ltp)*100;
+  const NEAR = 1; // within 1% of an edge = "about to lock"
+  let state='open';
+  if(roomUp<=0.05) state='uc';
+  else if(roomDown<=0.05) state='lc';
+  else if(roomUp<=NEAR) state='near-uc';
+  else if(roomDown<=NEAR) state='near-lc';
+  return {uc, lc, roomUp:Math.max(0,roomUp), roomDown:Math.max(0,roomDown), state};
+}
+
 function computeStock(sym){
   const r = SNAP ? SNAP.rows[sym] : null;
   if(!r) return null;
@@ -730,6 +938,12 @@ function computeStock(sym){
     out.volRatio = (r.vol||0)/(avg||1);
   }
   out.pivot = fibPivot(r.high, r.low, r.prevClose!=null?r.prevClose:ltp);
+  out.rsi = RSI(closes,14);
+  out.divergence = detectDivergence(closes);
+  out.divType = out.divergence ? out.divergence.type : null;  // 'bullish'|'bearish'|null (for filtering)
+  out.circuit = circuitInfo(r.prevClose, ltp);
+  out.prevClose = r.prevClose;
+  out.roomUp = out.circuit ? out.circuit.roomUp : null;     // % to upper circuit (for filtering)
 
   // Conditions
   const C={};
@@ -891,7 +1105,7 @@ function afterData(state){
     const label = SNAP.marketOpen===true ? 'Live (market open)' : 'Last close';
     dd.innerHTML = '<b style="color:var(--muted)">Data:</b> '+fmtDate(SNAP.dataDate||SNAP.date)+' · '+label;
   }
-  renderTicker(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); renderPortfolio(); renderHistStats();
+  renderTicker(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); renderPortfolio(); renderHistStats(); renderSectors();
   showNotice(false);
 }
 
@@ -957,6 +1171,26 @@ function scoreBar(score, total){
   return `<span class="score-bar" title="${score}/${total} conditions">${h}</span>`;
 }
 function signalPill(s){ const c=s==='BUY'?'buy':s==='SELL'?'sell':'hold'; return `<span class="pill ${c}">${s}</span>`; }
+// Compact circuit-status chip: shows room to the nearer edge, or LOCKED state.
+function circuitChip(ci){
+  if(!ci) return '<span class="cc open" title="No previous close — circuit unknown">—</span>';
+  const lbl = {
+    'uc':'▲ LOCKED UC', 'lc':'▼ LOCKED LC',
+    'near-uc':'▲ '+ci.roomUp.toFixed(1)+'% to UC',
+    'near-lc':'▼ '+ci.roomDown.toFixed(1)+'% to LC',
+    'open':ci.roomUp.toFixed(1)+'% ↑ / '+ci.roomDown.toFixed(1)+'% ↓'
+  }[ci.state];
+  const title = `Upper circuit Rs ${fmt(ci.uc)} · Lower circuit Rs ${fmt(ci.lc)} (±15% of prev close)`;
+  return `<span class="cc ${ci.state}" title="${title}">${lbl}</span>`;
+}
+// Divergence chip. Strength shown as 1–3 dots.
+function divChip(d){
+  if(!d) return '<span class="dv none" title="No divergence detected">—</span>';
+  const dots = '●'.repeat(Math.max(1,Math.min(3,Math.round(d.strength*3))));
+  const arrow = d.type==='bullish'?'▲':'▼';
+  const label = d.type==='bullish'?'Bull div':'Bear div';
+  return `<span class="dv ${d.type}" title="${d.note} (RSI ${d.rsiNow}). Watch signal — confirm with volume/price action.">${arrow} ${label} ${dots}</span>`;
+}
 
 function renderDashboard(){
   if(!SNAP){ return; }
@@ -1028,7 +1262,81 @@ function buildCondToggles(){
   }));
 }
 function saveCfg(){ store.set(LS.cfg, CFG); }
-function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); }
+function recompute(){ computeAll(); renderDashboard(); renderScreener(); renderHorizon(); renderWatch(); renderSectors(); }
+
+/* ---------- Range filters (Buy Screener + Screener Lab) ---------- */
+// Each field: key on the row object, label, suffix for display, optional value-extractor.
+const SCREEN_RANGE_FIELDS=[
+  {key:'ltp',       label:'LTP (Rs)',  get:r=>r.ltp},
+  {key:'pctChange', label:'% Change',  get:r=>r.pctChange},
+  {key:'volRatio',  label:'Volume ×',  get:r=>r.volRatio},
+  {key:'score',     label:'Score',     get:r=>r.score},
+  {key:'macdHist',  label:'MACD hist', get:r=>r.macdHist},
+  {key:'bbPos',     label:'BB Pos (%)',get:r=>r.bbPos!=null?r.bbPos*100:null},
+  {key:'roomUp',    label:'Room to UC (%)', get:r=>r.roomUp},
+];
+// Screener Lab rows use different field names (m.pct, no score/bbPos), so map to what hzMetrics provides.
+const HZ_RANGE_FIELDS=[
+  {key:'ltp',       label:'LTP (Rs)',  get:m=>m.ltp},
+  {key:'pct',       label:'% Change',  get:m=>m.pct},
+  {key:'volRatio',  label:'Volume ×',  get:m=>m.volRatio},
+  {key:'hist',      label:'MACD hist', get:m=>m.hist},
+  {key:'rangePos',  label:'1yr Range (%)', get:m=>m.rangePos},
+];
+const RANGE_STATE={ screenRange:{}, hzRange:{} };
+
+function buildRangePanel(panelId, fields, onChange){
+  const body=document.getElementById(panelId+'Body'); if(!body || body._built) return;
+  body._built=true;
+  body.innerHTML=fields.map(f=>`
+    <div class="rfield">
+      <label>${f.label}</label>
+      <div class="rr2">
+        <input type="number" step="any" placeholder="min" data-panel="${panelId}" data-key="${f.key}" data-bound="min">
+        <span class="dash">–</span>
+        <input type="number" step="any" placeholder="max" data-panel="${panelId}" data-key="${f.key}" data-bound="max">
+      </div>
+    </div>`).join('');
+  body.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const p=inp.dataset.panel,k=inp.dataset.key,b=inp.dataset.bound;
+      RANGE_STATE[p][k]=RANGE_STATE[p][k]||{};
+      const v=inp.value.trim();
+      if(v==='') delete RANGE_STATE[p][k][b]; else RANGE_STATE[p][k][b]=parseFloat(v);
+      if(RANGE_STATE[p][k].min==null && RANGE_STATE[p][k].max==null) delete RANGE_STATE[p][k];
+      updateRangeActive(p);
+      onChange();
+    });
+  });
+  // header toggle + clear
+  const head=document.querySelector(`.rp-head[data-toggle="${panelId}"]`);
+  if(head && !head._bound){ head._bound=true; head.addEventListener('click',e=>{
+    if(e.target.closest('button')) return;
+    document.getElementById(panelId).classList.toggle('open');
+  }); }
+  const clr=document.getElementById(panelId+'Clear');
+  if(clr && !clr._bound){ clr._bound=true; clr.addEventListener('click',()=>{
+    RANGE_STATE[panelId]={};
+    body.querySelectorAll('input').forEach(i=>i.value='');
+    updateRangeActive(panelId); onChange();
+  }); }
+}
+function updateRangeActive(panelId){
+  const n=Object.keys(RANGE_STATE[panelId]||{}).length;
+  const el=document.getElementById(panelId+'Active');
+  if(el) el.textContent = n? `${n} active` : '';
+}
+function passRange(panelId, fields, row){
+  const st=RANGE_STATE[panelId]; if(!st) return true;
+  for(const f of fields){
+    const rng=st[f.key]; if(!rng) continue;
+    const v=f.get(row);
+    if(v==null || isNaN(v)) return false;        // unknown value fails an active filter
+    if(rng.min!=null && v<rng.min) return false;
+    if(rng.max!=null && v>rng.max) return false;
+  }
+  return true;
+}
 
 function renderScreener(){
   const body=document.getElementById('screenBody');
@@ -1046,12 +1354,16 @@ function renderScreener(){
   const q=(document.getElementById('screenSearch').value||'').toUpperCase().trim();
   if(q) rows=rows.filter(r=>r.symbol.includes(q));
   if(screenOnlyBuy) rows=rows.filter(r=>r.signal==='BUY');
+  if(divFilter!=='all') rows=rows.filter(r=>r.divType===divFilter);
+  buildRangePanel('screenRange', SCREEN_RANGE_FIELDS, renderScreener);
+  rows=rows.filter(r=>passRange('screenRange', SCREEN_RANGE_FIELDS, r));
 
   rows.sort((a,b)=>{
     let av=a[sortKey], bv=b[sortKey];
     if(sortKey==='symbol'){ return sortDir*(av<bv?-1:av>bv?1:0); }
     if(sortKey==='signal'){ const o={BUY:2,HOLD:1,SELL:0}; av=o[a.signal];bv=o[b.signal]; }
     if(sortKey==='pivot'){ av=a.pivot?a.pivot.p:0; bv=b.pivot?b.pivot.p:0; }
+    if(sortKey==='divType'){ const o={bullish:2,bearish:0}; av=a.divType?o[a.divType]:1; bv=b.divType?o[b.divType]:1; }
     av=av==null?-Infinity:av; bv=bv==null?-Infinity:bv;
     return sortDir*(av-bv);
   });
@@ -1068,10 +1380,12 @@ function renderScreener(){
       <td class="${r.macdHist>0?'up':r.macdHist<0?'dn':'dim'}">${r.macdHist!=null?fmt(r.macdHist):'—'}</td>
       <td class="${r.volRatio>1?'up':'dim'}">${r.volRatio!=null?r.volRatio.toFixed(2)+'×':'—'}</td>
       <td class="${r.pivot&&r.ltp>r.pivot.p?'up':'dim'}">${r.pivot?fmt(r.pivot.p):'—'}</td>
+      <td>${circuitChip(r.circuit)}</td>
+      <td>${divChip(r.divergence)}</td>
       <td>${scoreBar(r.score,r.enabled)}</td>
       <td>${signalPill(r.signal)}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="10" class="empty fs-sm">No matches.</td></tr>`;
+  }).join('') : `<tr><td colspan="12" class="empty fs-sm">No matches.</td></tr>`;
 }
 
 /* ---------- Horizon screeners (Short / Mid / Long term) ---------- */
@@ -1117,7 +1431,7 @@ function bindHorizonSearch(id, fn){ const el=document.getElementById(id); if(el 
 let HZ='short';
 const HZ_META={
   short:{ title:'Short Term', desc:'Momentum & volume plays over days to a few weeks.',
-    notice:'<b>Short term (days – few weeks).</b> The most rumor-driven, riskiest horizon on NEPSE. Moves cluster in hot sectors (hydropower, microfinance, news stocks) and reverse fast. Watch <b>volume</b> above all — a price move without volume rarely holds. Don\'t chase a stock that already ran 20–30%. Mind T+2 settlement and daily circuit limits. <i>Educational only, not advice.</i>',
+    notice:'<b>Short term (days – few weeks).</b> The most rumor-driven, riskiest horizon on NEPSE. Moves cluster in hot sectors (hydropower, microfinance, news stocks) and reverse fast. Watch <b>volume</b> above all — a price move without volume rarely holds. Don\'t chase a stock that already ran hard. Mind <b>T+2 settlement</b> and the <b>±15% daily circuit limit</b> (raised from 10% in Apr 2026) — a stock can lock at upper/lower circuit and trap you. The Buy Screener\'s Circuit column shows how much room is left. <i>Educational only, not advice.</i>',
     head:['Symbol','LTP','%Chg','Vol×','MACD','vs SMA20','Setup'] },
   mid:{ title:'Mid Term', desc:'Positional swings over a few months to about a year.',
     notice:'<b>Mid term (few months – ~1 year).</b> Pros watch the trend plus events: quarterly results, dividend/bonus & rights seasons, and especially <b>interest rates</b> — when bank rates fall, money rotates from deposits into shares and the market tends to rally. Catching a sector early is the game. <i>Educational only, not advice.</i>',
@@ -1230,12 +1544,191 @@ function renderHorizon(){
   const q=(document.getElementById('hzSearch').value||'').toUpperCase().trim();
   let rows=hzRows(HZ);
   if(q) rows=rows.filter(m=>m.sym.includes(q));
+  buildRangePanel('hzRange', HZ_RANGE_FIELDS, renderHorizon);
+  rows=rows.filter(m=>passRange('hzRange', HZ_RANGE_FIELDS, m));
   const labelN = HZ==='short'?'setups': HZ==='mid'?'in uptrend':'with long history';
   cEl.textContent=`${rows.length} ${labelN}`;
   const limit = HZ==='long'?120:80;
   bEl.innerHTML = rows.length ? rows.slice(0,limit).map(m=>hzRowHtml(HZ,m)).join('')
     : `<tr><td colspan="7" class="empty fs-sm">Nothing matches yet. If indicator columns are blank, backfill a year of history in Data &amp; History.</td></tr>`;
 }
+
+/* ---------- Sectors ---------- */
+let secSortKey='turnover', secSortDir=-1, secExpanded={};
+
+// Build a clean sector name from various API shapes.
+function cleanSectorName(s){
+  if(s==null) return null;
+  s=(''+s).trim();
+  if(!s || /^null$/i.test(s)) return null;
+  return s;
+}
+// Try several endpoint shapes to get a {SYMBOL: sectorName} map.
+async function fetchSectorMap(){
+  const map={};
+  // Shape A: /SectorScrips → { "Commercial Banks":["NABIL","NICA",...], ... }
+  // Shape B: /SecurityList or /CompanyList → [{symbol, sectorName/sector}, ...]
+  const tryEndpoints=['/SectorScrips','/SectorwiseSummary','/SecurityList','/CompanyList'];
+  for(const ep of tryEndpoints){
+    let raw=null;
+    try{ raw=await jget(ep); }catch(e){ continue; }
+    if(!raw) continue;
+    // Shape A: object whose values are arrays of symbols
+    if(!Array.isArray(raw) && typeof raw==='object'){
+      let used=false;
+      for(const [sector,val] of Object.entries(raw)){
+        if(Array.isArray(val)){
+          for(const item of val){
+            const sym=(typeof item==='string'?item:(item.symbol||item.Symbol||'')).toString().toUpperCase().trim();
+            if(sym){ map[sym]=cleanSectorName(sector)||map[sym]; used=true; }
+          }
+        }
+      }
+      if(used) return map;
+    }
+    // Shape B: array of company objects with a sector field
+    const arr = Array.isArray(raw) ? raw : (raw.data||raw.content||raw.result||Object.values(raw).find(v=>Array.isArray(v)));
+    if(Array.isArray(arr)){
+      let used=false;
+      for(const o of arr){
+        const sym=(o.symbol||o.Symbol||o.securitySymbol||'').toString().toUpperCase().trim();
+        const sec=cleanSectorName(o.sectorName||o.sector||o.Sector||o.sectorDescription||(o.sectorMaster&&o.sectorMaster.sectorDescription));
+        if(sym && sec){ map[sym]=sec; used=true; }
+      }
+      if(used) return map;
+    }
+  }
+  return Object.keys(map).length?map:null;
+}
+// Try to get official sub-indices (sector indices).
+async function fetchSubIndices(){
+  for(const ep of ['/SubIndices','/NepseSubIndices','/Subindices','/IndexList']){
+    let raw=null;
+    try{ raw=await jget(ep); }catch(e){ continue; }
+    if(!raw) continue;
+    const out=[];
+    const pushRow=(name,val,ch,pct)=>{ const nm2=cleanSectorName(name); if(nm2) out.push({name:nm2, index:num(val), ch:num(ch), pct:num(pct)}); };
+    const num=v=>{ if(v==null) return null; const n=parseFloat((''+v).replace(/,/g,'')); return isNaN(n)?null:n; };
+    if(!Array.isArray(raw) && typeof raw==='object' && !raw.data && !raw.content){
+      // object: { "Banking SubIndex": {index, change, perChange}, ... } OR { name: value }
+      for(const [k,v] of Object.entries(raw)){
+        if(v && typeof v==='object') pushRow(k, v.index||v.currentValue||v.value||v.close, v.change||v.pointChange, v.perChange||v.percentageChange);
+        else pushRow(k, v, null, null);
+      }
+    } else {
+      const arr=Array.isArray(raw)?raw:(raw.data||raw.content||raw.result||[]);
+      for(const o of arr){ pushRow(o.index||o.indexName||o.name||o.Sector, o.currentValue||o.value||o.close||o.index, o.change||o.pointChange, o.perChange||o.percentageChange); }
+    }
+    if(out.length) return out;
+  }
+  return null;
+}
+async function fetchSectors(){
+  const btn=document.getElementById('secFetchBtn');
+  const notice=document.getElementById('secNotice');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Fetching…';
+  notice.style.display='none';
+  try{
+    const map=await fetchSectorMap();
+    if(!map){ throw new Error('No sector endpoint responded with usable data.'); }
+    let sub=null; try{ sub=await fetchSubIndices(); }catch(e){}
+    SECTORS={ ts:Date.now(), map, sub };
+    store.set(LS.sectors, SECTORS);
+    renderSectors();
+  }catch(e){
+    notice.style.display='flex';
+    notice.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Could not fetch the sector map ('+e.message+'). The API may be asleep (wait 30–50s and retry) or this endpoint may be blocked. The breakdown needs the sector map at least once.</span>';
+  }finally{
+    btn.disabled=false; btn.textContent= SECTORS?'Refresh sector map':'Fetch sector map';
+  }
+}
+
+function sectorAggregates(){
+  if(!SECTORS||!SECTORS.map||!SNAP) return [];
+  const groups={};
+  for(const r of COMPUTED){
+    const sec=SECTORS.map[r.symbol];
+    if(!sec) continue;
+    (groups[sec]=groups[sec]||[]).push(r);
+  }
+  const rows=[];
+  for(const [sector,list] of Object.entries(groups)){
+    let adv=0,dec=0,turnover=0,pctSum=0,n=0,top=null;
+    for(const r of list){
+      const p=r.pctChange; if(p>0)adv++; else if(p<0)dec++;
+      if(p!=null){ pctSum+=p; n++; }
+      const snr=SNAP.rows[r.symbol];
+      if(snr){ turnover += (snr.ltp||0)*(snr.vol||0); }
+      if(top==null || (p!=null && p>top.pctChange)) top=r;
+    }
+    rows.push({ sector, count:list.length, adv, dec,
+      avgPct: n?pctSum/n:null, turnover,
+      breadth: adv-dec,
+      topMover: top?top.symbol:null, topMoverPct: top?top.pctChange:null,
+      stocks:list });
+  }
+  return rows;
+}
+
+function renderSectors(){
+  const body=document.getElementById('secBody');
+  const cEl=document.getElementById('secCount');
+  const fbtn=document.getElementById('secFetchBtn');
+  if(!body) return;
+  if(SECTORS) fbtn.textContent='Refresh sector map';
+
+  // sub-indices block
+  const subWrap=document.getElementById('secSubWrap'), subBody=document.getElementById('secSubBody');
+  if(SECTORS && SECTORS.sub && SECTORS.sub.length){
+    subWrap.style.display='block';
+    subBody.innerHTML=SECTORS.sub.map(s=>`<tr>
+      <td style="text-align:left"><span class="sym">${s.name}</span></td>
+      <td>${fmt(s.index)}</td>
+      <td class="${s.ch>0?'up':s.ch<0?'dn':'dim'}">${s.ch!=null?(s.ch>0?'+':'')+fmt(s.ch):'—'}</td>
+      <td class="${pctClass(s.pct)}">${s.pct!=null?arrow(s.pct)+Math.abs(s.pct).toFixed(2)+'%':'—'}</td>
+    </tr>`).join('');
+  } else subWrap.style.display='none';
+
+  if(!SNAP){ body.innerHTML=`<tr><td colspan="6" class="empty"><b>No data yet</b>Fetch latest data on the Dashboard first.</td></tr>`; cEl.textContent='—'; return; }
+  if(!SECTORS||!SECTORS.map){ body.innerHTML=`<tr><td colspan="6" class="empty"><b>No sector map yet</b>Click “Fetch sector map” above (needed once; cached after).</td></tr>`; cEl.textContent='—'; return; }
+
+  let rows=sectorAggregates();
+  const q=(document.getElementById('secSearch').value||'').toLowerCase().trim();
+  if(q) rows=rows.filter(r=>r.sector.toLowerCase().includes(q));
+  rows.sort((a,b)=>{
+    let av=a[secSortKey], bv=b[secSortKey];
+    if(secSortKey==='sector') return secSortDir*(av<bv?-1:av>bv?1:0);
+    if(secSortKey==='breadth'){ av=a.breadth; bv=b.breadth; }
+    if(secSortKey==='topMover'){ av=a.topMoverPct; bv=b.topMoverPct; }
+    av=av==null?-Infinity:av; bv=bv==null?-Infinity:bv;
+    return secSortDir*(av-bv);
+  });
+
+  const mapped=COMPUTED.filter(r=>SECTORS.map[r.symbol]).length;
+  cEl.textContent=`${rows.length} sectors · ${mapped} stocks mapped`;
+
+  body.innerHTML = rows.length ? rows.map(r=>{
+    const head=`<tr style="cursor:pointer" onclick="toggleSector('${r.sector.replace(/'/g,"\\'")}')">
+      <td style="text-align:left"><span class="sym">${r.sector}</span></td>
+      <td>${r.count}</td>
+      <td class="${pctClass(r.avgPct)}">${r.avgPct!=null?arrow(r.avgPct)+Math.abs(r.avgPct).toFixed(2)+'%':'—'}</td>
+      <td><span class="up">${r.adv}</span> / <span class="dn">${r.dec}</span></td>
+      <td>${fmtBig(r.turnover)}</td>
+      <td class="${pctClass(r.topMoverPct)}">${r.topMover?r.topMover+' '+arrow(r.topMoverPct)+Math.abs(r.topMoverPct).toFixed(1)+'%':'—'}</td>
+    </tr>`;
+    if(!secExpanded[r.sector]) return head;
+    const sub=r.stocks.slice().sort((a,b)=>b.pctChange-a.pctChange).map(s=>`
+      <tr style="cursor:pointer;background:rgba(224,168,46,.03)" onclick="openDetail('${s.symbol}')">
+        <td style="text-align:left;padding-left:28px"><span class="sym" style="font-weight:500">${s.symbol}<small>${nm(s.symbol)}</small></span></td>
+        <td>${fmt(s.ltp)}</td>
+        <td class="${pctClass(s.pctChange)}">${arrow(s.pctChange)}${Math.abs(s.pctChange).toFixed(2)}%</td>
+        <td colspan="3" class="dim fs-sm" style="text-align:left">${signalPill(s.signal)}</td>
+      </tr>`).join('');
+    return head+sub;
+  }).join('') : `<tr><td colspan="6" class="empty fs-sm">No sectors match. (If a stock isn't mapped, the sector feed may not include it.)</td></tr>`;
+}
+function toggleSector(sec){ secExpanded[sec]=!secExpanded[sec]; renderSectors(); }
+window.toggleSector=toggleSector;
 
 /* ---------- Watchlist ---------- */
 function renderWatch(){
@@ -1331,19 +1824,27 @@ function openDetail(sym){
       <button class="x" onclick="closeModal()">×</button>
     </div>
     <div class="detail-head">
-      <div><div class="px-big">${fmt(r.ltp)}</div><div class="${pctClass(r.pctChange)}">${arrow(r.pctChange)} ${Math.abs(r.pctChange).toFixed(2)}% today</div></div>
+      <div><div class="px-big">${fmt(r.ltp)}</div><div class="${pctClass(r.pctChange)}">${arrow(r.pctChange)} ${Math.abs(r.pctChange).toFixed(2)}% today</div>
+        <div style="margin-top:8px">${circuitChip(r.circuit)}</div></div>
       <div style="flex:1;min-width:240px"><canvas id="detailChart" height="120"></canvas></div>
     </div>
     <div class="ind-grid">
+      <div class="ind"><div class="k">Upper Circuit</div><div class="v up">${r.circuit?fmt(r.circuit.uc):'—'}</div></div>
+      <div class="ind"><div class="k">Lower Circuit</div><div class="v dn">${r.circuit?fmt(r.circuit.lc):'—'}</div></div>
+      <div class="ind"><div class="k">Prev Close</div><div class="v">${r.prevClose!=null?fmt(r.prevClose):'—'}</div></div>
       <div class="ind"><div class="k">SMA ${CFG.sma}</div><div class="v ${r.sma&&r.ltp>r.sma?'up':''}">${fmt(r.sma)}</div></div>
       <div class="ind"><div class="k">BB Upper</div><div class="v">${r.bb?fmt(r.bb.up):'—'}</div></div>
       <div class="ind"><div class="k">BB Lower</div><div class="v">${r.bb?fmt(r.bb.low):'—'}</div></div>
       <div class="ind"><div class="k">MACD Hist</div><div class="v ${r.macdHist>0?'up':r.macdHist<0?'dn':''}">${r.macdHist!=null?fmt(r.macdHist):'—'}</div></div>
+      <div class="ind"><div class="k">RSI 14</div><div class="v ${r.rsi>70?'dn':r.rsi<30?'up':''}">${r.rsi!=null?r.rsi.toFixed(1):'—'}</div></div>
       <div class="ind"><div class="k">Volume ×Avg</div><div class="v ${r.volRatio>1?'up':''}">${r.volRatio!=null?r.volRatio.toFixed(2)+'×':'—'}</div></div>
       <div class="ind"><div class="k">Fib Pivot</div><div class="v ${piv&&r.ltp>piv.p?'up':''}">${piv?fmt(piv.p):'—'}</div></div>
       ${piv?`<div class="ind"><div class="k">R1 / R2</div><div class="v" style="font-size:13px">${fmt(piv.r1)} / ${fmt(piv.r2)}</div></div>
       <div class="ind"><div class="k">S1 / S2</div><div class="v" style="font-size:13px">${fmt(piv.s1)} / ${fmt(piv.s2)}</div></div>`:''}
     </div>
+    ${r.divergence?`<div class="notice" style="display:flex;margin-top:16px;border-color:${r.divergence.type==='bullish'?'var(--buy)':'var(--sell)'}">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+      <span><b>${r.divergence.type==='bullish'?'Bullish':'Bearish'} divergence detected.</b> ${r.divergence.note} (RSI ${r.divergence.rsiNow}). This is an early <i>watch</i> signal, not a buy/sell trigger — confirm with volume and price action before acting.</span></div>`:''}
     <h3 style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 8px">Condition check (${r.score}/${r.enabled})</h3>
     <div class="ind-grid">${condRows}</div>
     <div class="modal-actions">
@@ -1493,10 +1994,20 @@ function switchTab(v){
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   if(v==='watch') renderWatch();
   if(v==='horizon') renderHorizon();
+  if(v==='sectors') renderSectors();
 }
 document.getElementById('tabs').addEventListener('click',e=>{ if(e.target.dataset.v) switchTab(e.target.dataset.v); });
 document.getElementById('hzSeg').addEventListener('click',e=>{ if(e.target.dataset.h){ HZ=e.target.dataset.h; renderHorizon(); } });
 (function(){ const s=document.getElementById('hzSearch'); if(s) s.addEventListener('input',renderHorizon); })();
+(function(){
+  const s=document.getElementById('secSearch'); if(s) s.addEventListener('input',renderSectors);
+  const b=document.getElementById('secFetchBtn'); if(b) b.addEventListener('click',fetchSectors);
+  document.querySelectorAll('#secTable thead th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.sk; if(!k) return;
+    if(secSortKey===k) secSortDir*=-1; else { secSortKey=k; secSortDir=(k==='sector')?1:-1; }
+    renderSectors();
+  }));
+})();
 
 document.getElementById('refreshBtn').addEventListener('click',fetchLatest);
 document.getElementById('loadDemoBtn').addEventListener('click',loadDemo);
@@ -1511,6 +2022,12 @@ bind('cfgSma','cfgSmaV','sma'); bind('cfgBb','cfgBbV','bb'); bind('cfgMin','cfgM
 
 document.getElementById('screenSearch').addEventListener('input',renderScreener);
 document.getElementById('onlyBuyBtn').addEventListener('click',function(){ screenOnlyBuy=!screenOnlyBuy; this.classList.toggle('primary',screenOnlyBuy); this.textContent=screenOnlyBuy?'Show all':'Show BUY only'; renderScreener(); });
+document.getElementById('divFilterBtn').addEventListener('click',function(){
+  divFilter = divFilter==='all' ? 'bullish' : divFilter==='bullish' ? 'bearish' : 'all';
+  this.classList.toggle('primary', divFilter!=='all');
+  this.textContent = divFilter==='all' ? 'Divergence: all' : divFilter==='bullish' ? 'Divergence: bullish ▲' : 'Divergence: bearish ▼';
+  renderScreener();
+});
 document.querySelectorAll('#screenTable thead th').forEach(th=>th.addEventListener('click',()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(k==='symbol')?1:-1; } renderScreener(); }));
 
 document.getElementById('watchAddBtn').addEventListener('click',addWatch);
