@@ -21,7 +21,7 @@
   --line-soft:#1A2029;
   --txt:#EAEDF2;
   --muted:#8893A2;
-  --dim:#4C5563;
+  --dim:#7A8494;
   --buy:#2BB673;
   --buy-dim:#0E3324;
   --sell:#F25F5C;
@@ -50,6 +50,13 @@ button{font-family:inherit;cursor:pointer}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
 ::-webkit-scrollbar-thumb:hover{background:#2c3744}
+
+/* ---------- Accessibility: keyboard focus & motion ---------- */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms!important;animation-iteration-count:1!important;transition-duration:0.001ms!important;scroll-behavior:auto!important}
+  .ticker-track{animation:none!important}
+}
 
 /* ---------- Top bar ---------- */
 header{
@@ -155,6 +162,7 @@ nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
 .sw .track:before{content:"";position:absolute;height:15px;width:15px;left:3px;top:3px;background:#7A8694;border-radius:50%;transition:.2s}
 .sw input:checked + .track{background:rgba(224,168,46,.25)}
 .sw input:checked + .track:before{transform:translateX(17px);background:var(--accent)}
+@media(min-width:761px){ #colDensityBtn{display:none} }
 .config-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)}
 .minislider{display:flex;flex-direction:column;gap:3px}
 .minislider label{font-size:10.5px;color:var(--muted);letter-spacing:.5px}
@@ -180,6 +188,7 @@ input[type=range]{accent-color:var(--accent);width:120px}
   padding:9px 13px;color:var(--txt);font-size:13px;min-width:200px;font-family:inherit;
 }
 .search:focus{outline:none;border-color:var(--accent)}
+.search:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* ---------- Range filter panel ---------- */
 .rangepanel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
@@ -194,6 +203,7 @@ input[type=range]{accent-color:var(--accent);width:120px}
 .rfield .rr2{display:flex;align-items:center;gap:6px}
 .rfield input{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;color:var(--txt);font-size:12px;font-family:'Roboto Mono',monospace}
 .rfield input:focus{outline:none;border-color:var(--accent)}
+.rfield input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .rfield .dash{color:var(--dim);font-size:12px}
 
 /* ---------- Tables ---------- */
@@ -203,6 +213,7 @@ thead th{
   text-align:right;padding:11px 14px;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;
   color:var(--muted);font-weight:600;background:var(--panel-2);
   border-bottom:1px solid var(--line);position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;
+  z-index:2;
 }
 thead th:first-child,tbody td:first-child{text-align:left}
 thead th:hover{color:var(--txt)}
@@ -210,6 +221,18 @@ tbody td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--line-s
 tbody tr{transition:background .12s}
 tbody tr:hover{background:rgba(224,168,46,.05)}
 tbody tr:last-child td{border-bottom:none}
+/* Sticky symbol column while horizontally scrolling a wide table (mobile) — keeps the
+   row's identity in view. Only kicks in once the table actually needs to scroll. */
+@media(max-width:760px){
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  thead th:first-child{position:sticky;left:0;z-index:4;background:var(--panel-2)}
+  tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--panel)}
+  tbody tr:hover td:first-child{background:#171d27}
+  /* Secondary/raw-indicator columns hidden by default on small screens — already
+     summarized in the Score column. A "More columns" toggle (screener bar) reveals them. */
+  .sec-col{display:none}
+  .tbl-wrap.show-all .sec-col{display:table-cell}
+}
 .sym{font-family:'Inter Tight',sans-serif;font-weight:600;letter-spacing:.2px}
 .sym small{display:block;font-weight:400;color:var(--dim);font-size:10.5px;letter-spacing:0;font-family:'Inter Tight',sans-serif}
 .pill{display:inline-block;padding:3px 9px;border-radius:5px;font-size:10.5px;font-weight:600;letter-spacing:.4px;font-family:'Inter Tight',sans-serif}
@@ -234,6 +257,9 @@ tbody tr:last-child td{border-bottom:none}
 .heat-tbl th{color:var(--muted);font-weight:600;font-size:10px}
 .heat-tbl td.sec-name{text-align:left;font-family:'Inter Tight',sans-serif;font-weight:600;color:var(--txt)}
 .heat-cell{color:#fff;font-weight:600}
+@media(max-width:760px){
+  .heat-tbl th:first-child,.heat-tbl td.sec-name{position:sticky;left:0;z-index:2;background:var(--bg)}
+}
 .score-bar{display:inline-flex;gap:2px;vertical-align:middle}
 .score-bar i{width:5px;height:13px;border-radius:1px;background:#2A323D;display:inline-block}
 .score-bar i.f{background:var(--accent)}
@@ -259,6 +285,7 @@ tbody tr:last-child td{border-bottom:none}
 .field label{font-size:11px;color:var(--muted);letter-spacing:.5px}
 .field input,.field select{background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:9px 11px;color:var(--txt);font-size:13px;font-family:inherit}
 .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field input:focus-visible,.field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
 /* modal */
@@ -290,8 +317,8 @@ tbody tr:last-child td{border-bottom:none}
   .ticker{display:none}
 }
 @media(max-width:720px){
-  /* allow wide tables to scroll horizontally rather than squashing */
-  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* allow wide tables to scroll horizontally rather than squashing (sticky first column
+     + overflow behavior is set at 760px above, shared with the wider tablet range) */
   .tbl-wrap table{min-width:560px}
   /* sliders go full width and stack */
   .config-row{gap:18px}
@@ -467,6 +494,7 @@ footer b{color:var(--muted)}
       <input class="search" id="screenSearch" placeholder="Filter by symbol…">
       <button class="btn" id="onlyBuyBtn">Show BUY only</button>
       <button class="btn" id="divFilterBtn" title="Cycle: all → bullish divergence → bearish divergence">Divergence: all</button>
+      <button class="btn ghost" id="colDensityBtn" title="Show/hide the raw indicator columns (SMA, BB, MACD, Pivot) — they're already summarized in Score">More columns</button>
       <div class="spacer"></div>
       <span class="fs-sm dim" id="screenCount">—</span>
     </div>
@@ -487,17 +515,17 @@ footer b{color:var(--muted)}
       <span id="historyWarnText"></span>
     </div>
 
-    <div class="tbl-wrap">
+    <div class="tbl-wrap" id="screenTblWrap">
       <table id="screenTable">
         <thead><tr>
           <th data-k="symbol">Symbol</th>
           <th data-k="ltp">LTP</th>
           <th data-k="pctChange">%Chg</th>
-          <th data-k="sma">SMA</th>
-          <th data-k="bbPos">BB Pos</th>
-          <th data-k="macdHist">MACD</th>
+          <th data-k="sma" class="sec-col">SMA</th>
+          <th data-k="bbPos" class="sec-col">BB Pos</th>
+          <th data-k="macdHist" class="sec-col">MACD</th>
           <th data-k="volRatio">Vol×</th>
-          <th data-k="pivot">Pivot</th>
+          <th data-k="pivot" class="sec-col">Pivot</th>
           <th data-k="roomUp">Circuit</th>
           <th data-k="divType">Divergence</th>
           <th data-k="score">Score</th>
@@ -1407,11 +1435,11 @@ function renderScreener(){
       <td><span class="sym">${r.symbol}<small>${nm(r.symbol)}</small></span></td>
       <td>${fmt(r.ltp)}</td>
       <td class="${pctClass(r.pctChange)}">${arrow(r.pctChange)}${Math.abs(r.pctChange).toFixed(2)}%</td>
-      <td class="${r.sma!=null&&r.ltp>r.sma?'up':'dim'}">${fmt(r.sma)}</td>
-      <td>${bbTxt}</td>
-      <td class="${r.macdHist>0?'up':r.macdHist<0?'dn':'dim'}">${r.macdHist!=null?fmt(r.macdHist):'—'}</td>
+      <td class="${r.sma!=null&&r.ltp>r.sma?'up':'dim'} sec-col">${fmt(r.sma)}</td>
+      <td class="sec-col">${bbTxt}</td>
+      <td class="${r.macdHist>0?'up':r.macdHist<0?'dn':'dim'} sec-col">${r.macdHist!=null?fmt(r.macdHist):'—'}</td>
       <td class="${r.volRatio>1?'up':'dim'}">${r.volRatio!=null?r.volRatio.toFixed(2)+'×':'—'}</td>
-      <td class="${r.pivot&&r.ltp>r.pivot.p?'up':'dim'}">${r.pivot?fmt(r.pivot.p):'—'}</td>
+      <td class="${r.pivot&&r.ltp>r.pivot.p?'up':'dim'} sec-col">${r.pivot?fmt(r.pivot.p):'—'}</td>
       <td>${circuitChip(r.circuit)}</td>
       <td>${divChip(r.divergence)}</td>
       <td>${scoreBar(r.score,r.enabled)}</td>
@@ -2166,6 +2194,11 @@ document.getElementById('divFilterBtn').addEventListener('click',function(){
   this.classList.toggle('primary', divFilter!=='all');
   this.textContent = divFilter==='all' ? 'Divergence: all' : divFilter==='bullish' ? 'Divergence: bullish ▲' : 'Divergence: bearish ▼';
   renderScreener();
+});
+document.getElementById('colDensityBtn').addEventListener('click',function(){
+  const wrap=document.getElementById('screenTblWrap');
+  const showAll=wrap.classList.toggle('show-all');
+  this.textContent = showAll ? 'Fewer columns' : 'More columns';
 });
 document.querySelectorAll('#screenTable thead th').forEach(th=>th.addEventListener('click',()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(k==='symbol')?1:-1; } renderScreener(); }));
 
